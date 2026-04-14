@@ -29,18 +29,120 @@
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
-                    <ul class="navbar-nav me-auto">
-                        @auth
-                            <li class="nav-item">
-                                <a class="nav-link" href="/employees">👥 รายชื่อพนักงาน</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/leaves">📅 ระบบการลา</a>
-                            </li>
-                            @endauth
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+                        
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold text-primary" href="/home">📊 แดชบอร์ด</a>
+                        </li>
 
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle fw-bold text-success" href="#" role="button" data-bs-toggle="dropdown">
+                                🧑‍💻 ระบบบริการตนเอง
+                            </a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><h6 class="dropdown-header text-primary fw-bold">พนักงาน (ESS)</h6></li>
+                                <li><a class="dropdown-item" href="/leaves">📝 ระบบการลา (My Leaves)</a></li>
+                                <li><a class="dropdown-item text-muted" href="#">⏱️ บันทึกเวลาเข้า-ออก (เร็วๆ นี้)</a></li>
+                                <li><a class="dropdown-item text-muted" href="#">💰 สลิปเงินเดือน (เร็วๆ นี้)</a></li>
+                                <li><a class="dropdown-item text-muted" href="#">🎯 เป้าหมาย KPI ของฉัน (เร็วๆ นี้)</a></li>
+                                <li><a class="dropdown-item text-muted" href="#">🎓 ประวัติการอบรม (เร็วๆ นี้)</a></li>
+                                
+                                @can('is-manager')
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header text-danger fw-bold">หัวหน้างาน (MSS)</h6></li>
+                                    <li><a class="dropdown-item fw-bold" href="/leave-approvals">✅ อนุมัติใบลาทีม (Approvals)</a></li>
+                                    <li><a class="dropdown-item text-muted" href="#">✍️ ประเมินผลลูกน้อง (เร็วๆ นี้)</a></li>
+                                    <li><a class="dropdown-item text-muted" href="#">📅 ตารางกะงานของทีม (เร็วๆ นี้)</a></li>
+                                @endcan
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                1. ศูนย์กลางพนักงาน
+                            </a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                @can('view-employees-menu')
+                                    <li><a class="dropdown-item" href="/employees">👥 รายชื่อพนักงานทั้งหมด</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                @endcan
+                                <li><a class="dropdown-item text-muted" href="#">🏢 ผังองค์กร (เร็วๆ นี้)</a></li>
+                                @can('edit-employees')
+                                    <li><a class="dropdown-item text-muted" href="#">📂 ทะเบียนประวัติ/เอกสาร (เร็วๆ นี้)</a></li>
+                                @endcan
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                2. เวลาและการลา
+                            </a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><a class="dropdown-item text-muted" href="#">📅 ปฏิทินวันหยุดบริษัท (เร็วๆ นี้)</a></li>
+                                @can('edit-employees')
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-muted" href="#">⚙️ ตั้งค่าโควต้าการลา (เร็วๆ นี้)</a></li>
+                                    <li><a class="dropdown-item text-muted" href="#">📊 รายงานสรุปการลา (เร็วๆ นี้)</a></li>
+                                @endcan
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                3. เงินเดือน
+                            </a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><a class="dropdown-item text-muted" href="#">🧾 นโยบายภาษี/สวัสดิการ (เร็วๆ นี้)</a></li>
+                                @can('edit-employees')
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-muted" href="#">⚙️ รันรอบเงินเดือน (Payroll Run) (เร็วๆ นี้)</a></li>
+                                @endcan
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                4. สรรหาบุคลากร
+                            </a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><a class="dropdown-item text-muted" href="#">📢 ตำแหน่งที่เปิดรับทั้งหมด (เร็วๆ นี้)</a></li>
+                                @can('edit-employees')
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-muted" href="#">📝 จัดการประกาศงาน (เร็วๆ นี้)</a></li>
+                                    <li><a class="dropdown-item text-muted" href="#">🧑‍💼 ระบบคัดกรองผู้สมัคร (เร็วๆ นี้)</a></li>
+                                @endcan
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                5. ประเมินผล
+                            </a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                @can('edit-employees')
+                                    <li><a class="dropdown-item text-muted" href="#">🎯 จัดการแบบฟอร์มประเมิน (เร็วๆ นี้)</a></li>
+                                    <li><a class="dropdown-item text-muted" href="#">📈 สรุปผลการประเมินองค์กร (เร็วๆ นี้)</a></li>
+                                @else
+                                    <li><a class="dropdown-item text-muted" href="#">ℹ️ นโยบายการประเมินผล (เร็วๆ นี้)</a></li>
+                                @endcan
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                6. ฝึกอบรม
+                            </a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><a class="dropdown-item text-muted" href="#">📚 แคตตาล็อกหลักสูตรบริษัท (เร็วๆ นี้)</a></li>
+                                @can('edit-employees')
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-muted" href="#">🛠️ จัดการคอร์สเรียน (เร็วๆ นี้)</a></li>
+                                    <li><a class="dropdown-item text-muted" href="#">📊 รายงานผลการอบรม (เร็วๆ นี้)</a></li>
+                                @endcan
+                            </ul>
+                        </li>
                     </ul>
-
+                    
                     <!-- Right Side Of Navbar -->
                     <ul class="navbar-nav ms-auto">
                         <!-- Authentication Links -->
@@ -63,6 +165,12 @@
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="/profile">
+                                        👤 ข้อมูลส่วนตัว (My Profile)
+                                    </a>
+
+                                    <hr class="dropdown-divider">
+
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">

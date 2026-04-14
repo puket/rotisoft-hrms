@@ -2,26 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\Department;
 use App\Models\Position;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class EmployeeController extends Controller
 {
     // ฟังก์ชันแสดงหน้ารายชื่อพนักงาน (และรองรับการค้นหา)
-    public function index(Request $request)
+public function index(Request $request)
     {
-        // 1. รับค่าคำค้นหาจากหน้าเว็บ (ถ้ามี)
-        $search = $request->input('search');
+        // 🔒 ล็อคสิทธิ์: ต้องเป็น HR, Admin หรือ Manager เท่านั้น ถึงจะเข้าหน้านี้ได้
+        Gate::authorize('view-employees-menu');
 
-        // 2. ดึงข้อมูล พร้อมผูกตาราง แผนก, ตำแหน่ง และ หัวหน้างาน (manager)
+        $search = $request->input('search');
+        $user = auth()->user();
+
         $query = Employee::with(['department', 'position', 'manager']);
 
-        // 3. ถ้ามีการพิมพ์ค้นหา ให้กรองข้อมูลตาม ชื่อ, นามสกุล หรือ รหัสพนักงาน
+        // 🔒 การกรองการมองเห็น: ถ้าไม่ใช่ Admin หรือ HR (แปลว่าเป็นแค่ Manager ธรรมดา) ให้เห็นแค่ลูกน้อง
+        if (!Gate::allows('view-all-employees')) {
+            $query->where('manager_id', $user->employee->id);
+        }
+
+        // 🔍 ระบบค้นหา
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('first_name', 'LIKE', "%{$search}%")
@@ -30,19 +38,82 @@ class EmployeeController extends Controller
             });
         }
 
-        // 4. แบ่งหน้าจอ (หน้าละ 10 คน) และพ่วงคำค้นหาไปกับปุ่มเปลี่ยนหน้าด้วย (withQueryString)
         $employees = $query->paginate(10)->withQueryString();
-        
         return view('employees.index', compact('employees', 'search'));
     }
 
-    // ส่วนฟังก์ชัน show($id) ที่เคยทำไว้ก่อนหน้านี้ ปล่อยไว้เหมือนเดิมได้เลยครับ
     public function show($id)
     {
+        Gate::authorize('view-employees-menu');
+        
         $employee = Employee::findOrFail($id);
+        $user = auth()->user();
+
+        // 🔒 เช็คสิทธิ์ดูข้อมูล: ถ้าไม่ใช่ HR/Admin และไม่ใช่หัวหน้างานของคนๆ นี้ จะดูไม่ได้
+        if (!Gate::allows('view-all-employees') && $employee->manager_id !== $user->employee->id) {
+            abort(403, 'คุณไม่มีสิทธิ์เข้าดูข้อมูลพนักงานท่านนี้');
+        }
+
         return view('employees.show', compact('employee'));
     }
 
+    public function edit($id)
+    {
+        // 🔒 เฉพาะ HR เท่านั้น
+        Gate::authorize('edit-employees');
+
+        $employee = Employee::findOrFail($id);
+        $departments = Department::all();
+        $positions = Position::all();
+        $managers = Employee::where('status', 'Active')->where('id', '!=', $id)->get(); 
+
+        return view('employees.edit', compact('employee', 'departments', 'positions', 'managers'));
+    }
+
+    // ฟังก์ชันสำหรับรับข้อมูลที่แก้แล้วมาบันทึกลง Database
+    public function update(Request $request, $id)
+    {
+        // 🔒 เฉพาะ HR เท่านั้น
+        Gate::authorize('edit-employees');
+
+        // 1. ตรวจสอบข้อมูล
+        $request->validate([
+            'employee_code' => 'required|unique:employees,employee_code,'.$id, // ห้ามรหัสซ้ำคนอื่น แต่ซ้ำตัวเองได้
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'department_id' => 'required',
+            'position_id' => 'required',
+            'status' => 'required'
+        ]);
+
+        $employee = Employee::findOrFail($id);
+
+        // 2. บันทึกข้อมูลแบบ Transaction (เซฟลงทั้งตาราง Employee และ User)
+        DB::transaction(function () use ($request, $employee) {
+            
+            // อัปเดตข้อมูลพนักงาน
+            $employee->update([
+                'employee_code' => $request->employee_code,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'phone' => $request->phone,
+                'department_id' => $request->department_id,
+                'position_id' => $request->position_id,
+                'manager_id' => $request->manager_id,
+                'status' => $request->status,
+            ]);
+
+            // อัปเดตชื่อในตาราง Users ด้วย ให้ตรงกัน
+            if ($employee->user) {
+                $employee->user->update([
+                    'name' => $request->first_name . ' ' . $request->last_name
+                ]);
+            }
+        });
+
+        return redirect('/employees')->with('success', 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว ✅');
+    }
+    
     // ฟังก์ชันเปิดหน้าฟอร์ม
     public function create()
     {

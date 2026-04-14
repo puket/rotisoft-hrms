@@ -9,7 +9,7 @@
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center pt-3 pb-2">
                     <h5 class="mb-0 fw-bold">👥 รายชื่อพนักงาน (Employee Directory)</h5>
                     
-                    @can('access-admin')
+                    @can('edit-employees')
                         <a href="/employees/create" class="btn btn-light btn-sm fw-bold">+ เพิ่มพนักงานใหม่</a>
                     @endcan
                 </div>
@@ -85,8 +85,11 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        <button class="btn btn-sm btn-outline-secondary">ดูข้อมูล</button>
-                                        <button class="btn btn-sm btn-outline-primary">แก้ไข</button>
+                                        <a href="/employees/{{ $emp->id }}" class="btn btn-sm btn-outline-secondary">ดูข้อมูล</a>
+
+                                        @can('edit-employees')
+                                            <a href="/employees/{{ $emp->id }}/edit" class="btn btn-sm btn-outline-primary">แก้ไข</a>
+                                        @endcan
                                     </td>
                                 </tr>
                                 @endforeach

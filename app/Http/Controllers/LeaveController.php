@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+
 use App\Models\Leave;
 use App\Http\Controllers\Controller;
 
@@ -22,6 +23,7 @@ class LeaveController extends Controller
         
         return view('leaves.index', compact('leaves'));
     }
+    
     public function store(Request $request)
     {
         $request->validate([
@@ -46,6 +48,58 @@ class LeaveController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'ส่งใบลาเรียบร้อยแล้ว รอหัวหน้าอนุมัติ');
+    }
+
+    // แสดงหน้ารายการใบลา (สำหรับหัวหน้า)
+    public function approvals(Request $request)
+    {
+        // 🔒 ล็อคสิทธิ์: ต้องเป็นหัวหน้างานเท่านั้นถึงจะเข้าหน้านี้ได้
+        Gate::authorize('is-manager');
+
+        $user = auth()->user();
+        
+        // รับค่าจากการค้นหา (ถ้าไม่มีให้ตั้งค่าเริ่มต้นเป็นดึงเฉพาะ 'Pending')
+        $search = $request->input('search');
+        $statusFilter = $request->input('status', 'Pending'); 
+
+        // ดึงใบลาเฉพาะของลูกน้อง
+        $query = Leave::whereHas('employee', function($q) use ($user) {
+            $q->where('manager_id', $user->employee->id);
+        });
+
+        // 🔍 กรองตามสถานะ
+        if ($statusFilter !== 'All') {
+            $query->where('status', $statusFilter);
+        }
+
+        // 🔍 กรองตามชื่อพนักงาน
+        if ($search) {
+            $query->whereHas('employee', function($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                  ->orWhere('last_name', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $leaves = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+
+        return view('leaves.approvals', compact('leaves', 'search', 'statusFilter'));
+    }
+
+    // อัปเดตสถานะใบลา
+    public function updateStatus(Request $request, $id)
+    {
+        // 🔒 ล็อคสิทธิ์: ต้องเป็นหัวหน้างานเท่านั้นถึงจะเข้าหน้านี้ได้
+        Gate::authorize('is-manager');
+        
+        $leave = Leave::findOrFail($id);
+        
+        $leave->update([
+            'status' => $request->status, // รับค่า 'Approved' หรือ 'Rejected' จากปุ่มที่กด
+            'approved_by' => auth()->user()->employee->id
+        ]);
+
+        $actionText = $request->status == 'Approved' ? '✅ อนุมัติ' : '❌ ปฏิเสธ';
+        return redirect()->back()->with('success', "{$actionText} ใบลาเรียบร้อยแล้ว");
     }
     
 }
