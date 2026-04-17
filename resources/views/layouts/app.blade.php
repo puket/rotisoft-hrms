@@ -35,15 +35,39 @@
                             <a class="nav-link fw-bold text-primary" href="/home">📊 แดชบอร์ด</a>
                         </li>
 
+                        @can('access-admin')
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-gear-fill"></i> ตั้งค่าระบบ
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('ot-settings.index') }}">
+                                            <i class="bi bi-clock-history me-2"></i> ตั้งค่า OT
+                                        </a>
+                                    </li>
+                                    
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="/admin/departments">
+                                            <i class="bi bi-building me-2"></i> จัดการแผนก
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        @endcan
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle fw-bold text-success" href="#" role="button" data-bs-toggle="dropdown">
                                 🧑‍💻 ระบบบริการตนเอง
                             </a>
                             <ul class="dropdown-menu shadow-sm border-0">
                                 <li><h6 class="dropdown-header text-primary fw-bold">พนักงาน (ESS)</h6></li>
+                                <li><a class="dropdown-item" href="/my-schedule">📅 ปฏิทินตารางทำงาน (My Schedule)</a></li>
                                 <li><a class="dropdown-item" href="/leaves">📝 ระบบการลา (My Leaves)</a></li>
-                                <li><a class="dropdown-item text-muted" href="#">⏱️ บันทึกเวลาเข้า-ออก (เร็วๆ นี้)</a></li>
-                                <li><a class="dropdown-item text-muted" href="#">💰 สลิปเงินเดือน (เร็วๆ นี้)</a></li>
+                                <li><a class="dropdown-item" href="/attendance">⏱️ บันทึกเวลาเข้า-ออก</a></li>
+                                <li><a class="dropdown-item fw-bold" href="/ot-requests">🕒 ขออนุมัติล่วงเวลา (OT Plan)</a></li>
+                                <li><a class="dropdown-item fw-bold" href="/my-payslips">💰 สลิปเงินเดือน (My Payslips)</a></li>
                                 <li><a class="dropdown-item text-muted" href="#">🎯 เป้าหมาย KPI ของฉัน (เร็วๆ นี้)</a></li>
                                 <li><a class="dropdown-item text-muted" href="#">🎓 ประวัติการอบรม (เร็วๆ นี้)</a></li>
                                 
@@ -51,6 +75,8 @@
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header text-danger fw-bold">หัวหน้างาน (MSS)</h6></li>
                                     <li><a class="dropdown-item fw-bold" href="/leave-approvals">✅ อนุมัติใบลาทีม (Approvals)</a></li>
+                                    <li><a class="dropdown-item fw-bold" href="/attendance-approvals">⏱️ อนุมัติคำร้องเวลา (Timesheet)</a></li>
+                                    <li><a class="dropdown-item fw-bold text-success" href="/ot-approvals">🕒 อนุมัติล่วงเวลาทีม (OT)</a></li>
                                     <li><a class="dropdown-item text-muted" href="#">✍️ ประเมินผลลูกน้อง (เร็วๆ นี้)</a></li>
                                     <li><a class="dropdown-item text-muted" href="#">📅 ตารางกะงานของทีม (เร็วๆ นี้)</a></li>
                                 @endcan
@@ -66,7 +92,7 @@
                                     <li><a class="dropdown-item" href="/employees">👥 รายชื่อพนักงานทั้งหมด</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                 @endcan
-                                <li><a class="dropdown-item text-muted" href="#">🏢 ผังองค์กร (เร็วๆ นี้)</a></li>
+                                <li><a class="dropdown-item fw-bold" href="/organization-chart">🏢 โครงสร้างองค์กร (Org Chart)</a></li>
                                 @can('edit-employees')
                                     <li><a class="dropdown-item text-muted" href="#">📂 ทะเบียนประวัติ/เอกสาร (เร็วๆ นี้)</a></li>
                                 @endcan
@@ -79,10 +105,15 @@
                             </a>
                             <ul class="dropdown-menu shadow-sm border-0">
                                 <li><a class="dropdown-item text-muted" href="#">📅 ปฏิทินวันหยุดบริษัท (เร็วๆ นี้)</a></li>
-                                @can('edit-employees')
+                                @can('view-all-employees')
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item text-muted" href="#">⚙️ ตั้งค่าโควต้าการลา (เร็วๆ นี้)</a></li>
-                                    <li><a class="dropdown-item text-muted" href="#">📊 รายงานสรุปการลา (เร็วๆ นี้)</a></li>
+                                @endcan
+                                @can('edit-employees')
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item fw-bold" href="/attendance-report">📊 รายงานการลงเวลา (Report)</a></li>
+                                    <li><a class="dropdown-item" href="/shifts">⚙️ จัดการกะการทำงาน (Shifts)</a></li>
+                                    <li><a class="dropdown-item" href="/shift-assignments">🧑‍💼 มอบหมายกะพนักงาน</a></li>
                                 @endcan
                             </ul>
                         </li>
@@ -95,7 +126,8 @@
                                 <li><a class="dropdown-item text-muted" href="#">🧾 นโยบายภาษี/สวัสดิการ (เร็วๆ นี้)</a></li>
                                 @can('edit-employees')
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-muted" href="#">⚙️ รันรอบเงินเดือน (Payroll Run) (เร็วๆ นี้)</a></li>
+                                    <li><a class="dropdown-item fw-bold" href="/salaries">💰 ตั้งค่าฐานเงินเดือน (Setup)</a></li>
+                                    <li><a class="dropdown-item fw-bold text-danger" href="/payrolls">⚡ ประมวลผลเงินเดือน (Run)</a></li>
                                 @endcan
                             </ul>
                         </li>

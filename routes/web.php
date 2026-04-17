@@ -7,6 +7,9 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\OtRequestController;
+
 // 1. ปิดระบบ Register
 Auth::routes(['register' => false]);
 
@@ -18,35 +21,103 @@ Route::get('/', function () {
 // ==========================================
 // 🔒 โซนหวงห้าม: ต้อง Login เท่านั้นถึงจะเข้าได้
 // ==========================================
+// ตรวจสอบใน routes/web.php
+Route::middleware(['auth', 'can:access-admin'])->group(function () {
+    // ต้องมี ->name(...) ต่อท้ายแบบนี้เป๊ะๆ นะครับ
+    Route::get('/admin/ot-settings', [App\Http\Controllers\OtSettingController::class, 'index'])->name('ot-settings.index');
+    Route::post('/admin/ot-settings', [App\Http\Controllers\OtSettingController::class, 'store'])->name('ot-settings.store');
+});
+
 Route::middleware(['auth'])->group(function () {
 
     // หน้า Dashboard (หลังล็อกอิน)
-        Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
 
     // หน้า ระบบพนักงาน
-        Route::get('/employees', [EmployeeController::class, 'index']);
-        // หน้าฟอร์มเพิ่มพนักงานใหม่
-        Route::get('/employees/create', [EmployeeController::class, 'create']);
-        // บันทึกข้อมูลพนักงานใหม่ลงฐานข้อมูล
-        Route::post('/employees', [EmployeeController::class, 'store']);
-        
-        Route::get('/employees/{id}', [EmployeeController::class, 'show']);
-        Route::get('/employees/{id}/edit', [EmployeeController::class, 'edit']);
-        Route::put('/employees/{id}', [EmployeeController::class, 'update']);
+    Route::get('/employees', [EmployeeController::class, 'index']);
+    // หน้าฟอร์มเพิ่มพนักงานใหม่
+    Route::get('/employees/create', [EmployeeController::class, 'create']);
+    // บันทึกข้อมูลพนักงานใหม่ลงฐานข้อมูล
+    Route::post('/employees', [EmployeeController::class, 'store']);
+    
+    Route::get('/employees/{id}', [EmployeeController::class, 'show']);
+    Route::get('/employees/{id}/edit', [EmployeeController::class, 'edit']);
+    Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 
     //หน้า ระบบลางาน
-        Route::get('/leaves', [LeaveController::class, 'index']);
-        Route::post('/leaves', [LeaveController::class, 'store']);
-        // หน้าแสดงรายการใบลาที่รออนุมัติ (สำหรับหัวหน้า)
-        Route::get('/leave-approvals', [LeaveController::class, 'approvals']);
-        // จัดการเปลี่ยนสถานะใบลา (Approve / Reject)
-        Route::post('/leaves/{id}/status', [LeaveController::class, 'updateStatus']);
+    Route::get('/leaves', [LeaveController::class, 'index']);
+    Route::post('/leaves', [LeaveController::class, 'store']);
+    // หน้าแสดงรายการใบลาที่รออนุมัติ (สำหรับหัวหน้า)
+    Route::get('/leave-approvals', [LeaveController::class, 'approvals']);
+    // จัดการเปลี่ยนสถานะใบลา (Approve / Reject)
+    Route::post('/leaves/{id}/status', [LeaveController::class, 'updateStatus']);
 
     // หน้า My Profile และ เปลี่ยนรหัสผ่าน
-        Route::get('/profile', [ProfileController::class, 'index']);
-        Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
+    Route::get('/profile', [ProfileController::class, 'index']);
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
+
+    // ระบบบันทึกเวลาเข้า-ออกงาน (ESS)
+    Route::get('/attendance', [AttendanceController::class, 'index']);
+    Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
+    Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
+        
+    // ส่งคำร้องขอแก้ไขเวลา/ลืมลงเวลา
+    Route::get('/attendance/request', [AttendanceController::class, 'createRequest']);
+    Route::post('/attendance/request', [AttendanceController::class, 'storeRequest']);
+
+    // หน้าจัดการคำร้องขอแก้ไขเวลา (MSS)
+    Route::get('/attendance-approvals', [AttendanceController::class, 'approvals']);
+    Route::post('/attendance-requests/{id}/status', [AttendanceController::class, 'updateStatus']);    
+
+    // รายงานสรุปการลงเวลา (HR/Admin)
+    Route::get('/attendance-report', [AttendanceController::class, 'report']);
+
+    // โครงสร้างองค์กร (Organization Chart)
+    Route::get('/organization-chart', [\App\Http\Controllers\EmployeeController::class, 'orgChart']);
+
+    // ระบบจัดการกะการทำงาน (HR/Admin)
+    Route::get('/shifts', [\App\Http\Controllers\ShiftController::class, 'index']);
+    Route::post('/shifts', [\App\Http\Controllers\ShiftController::class, 'store']);
+    Route::delete('/shifts/{id}', [\App\Http\Controllers\ShiftController::class, 'destroy']);
+    
+    // ระบบมอบหมายกะการทำงาน (HR/Admin)
+    Route::get('/shift-assignments', [\App\Http\Controllers\ShiftAssignmentController::class, 'index']);
+    Route::post('/shift-assignments', [\App\Http\Controllers\ShiftAssignmentController::class, 'store']);
+    
+    // ปฏิทินตารางทำงาน (My Schedule)
+    Route::get('/my-schedule', [\App\Http\Controllers\ScheduleController::class, 'index']);
+    Route::get('/api/schedules', [\App\Http\Controllers\ScheduleController::class, 'getEvents']);
+
+    // ==========================================
+    // ระบบขอทำล่วงเวลา (OT Plan)
+    // ==========================================
+    // ฝั่งพนักงาน (ESS)
+    Route::get('/ot-requests', [OtRequestController::class, 'index']);
+    Route::post('/ot-requests', [OtRequestController::class, 'store']);
+    
+    // ฝั่งหัวหน้างาน (MSS)
+    Route::get('/ot-approvals', [OtRequestController::class, 'approvals']);
+    Route::post('/ot-requests/{id}/status', [OtRequestController::class, 'updateStatus']);
+
+    // ระบบตั้งค่าฐานเงินเดือน (HR/Admin)
+    Route::get('/salaries', [\App\Http\Controllers\SalaryController::class, 'index']);
+    Route::post('/salaries', [\App\Http\Controllers\SalaryController::class, 'store']);
+
+    // ระบบรันเงินเดือน (Payroll Run)
+    Route::get('/payrolls', [\App\Http\Controllers\PayrollController::class, 'index']);
+    Route::post('/payrolls/calculate', [\App\Http\Controllers\PayrollController::class, 'calculate']);
+
+    // หน้าดูสลิปเงินเดือนของพนักงาน (ESS)
+    Route::get('/my-payslips', [App\Http\Controllers\PayrollController::class, 'myPayslips'])->name('my-payslips');
+
+
+
 });
 
+// ดาวน์โหลดสลิป PDF (สำหรับพนักงาน)
+Route::get('/my-payslips/{id}/download', [App\Http\Controllers\PayrollController::class, 'downloadPDF'])
+    ->name('payrolls.download-pdf');
+    
 Route::get('/debug-manager', function() {
     $user = auth()->user();
     

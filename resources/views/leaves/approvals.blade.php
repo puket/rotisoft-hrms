@@ -51,7 +51,7 @@
                                         <strong>{{ $leave->employee->first_name }} {{ $leave->employee->last_name }}</strong><br>
                                         <small class="text-muted">{{ $leave->employee->position->title ?? 'ไม่มีตำแหน่ง' }}</small>
                                     </td>
-                                    <td><span class="badge bg-secondary">{{ $leave->leave_type }}</span></td>
+                                    <td><span class="badge bg-secondary">{{ $leave->leaveType->name ?? '-' }}</span></td>
                                     <td>{{ \Carbon\Carbon::parse($leave->start_date)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($leave->end_date)->format('d/m/Y') }}</td>
                                     <td><small class="text-muted">{{ $leave->reason ?? '-' }}</small></td>
                                     <td class="text-center">

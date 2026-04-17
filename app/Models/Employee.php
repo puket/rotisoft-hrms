@@ -36,4 +36,22 @@ class Employee extends Model
     {
         return $this->hasMany(Leave::class);
     }
+
+    // เชื่อมความสัมพันธ์กับกะการทำงาน
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class);
+    }
+    
+    // ข้อมูลฐานเงินเดือน
+    public function salary()
+    {
+        return $this->hasOne(Salary::class);
+    }
+
+    // ประวัติการรับเงินเดือน (Payslips)
+    public function payrolls()
+    {
+        return $this->hasMany(Payroll::class);
+    }
 }

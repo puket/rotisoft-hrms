@@ -19,27 +19,33 @@ class LeaveController extends Controller
             return "ไม่พบข้อมูลพนักงานสำหรับบัญชีนี้ (กรุณาใช้บัญชีพนักงานทั่วไปในการทดสอบ)";
         }
 
-        $leaves = $user->employee->leaves()->orderBy('created_at', 'desc')->paginate(10);
+        $leaves = $user->employee->leaves()->with('leaveType')->orderBy('created_at', 'desc')->paginate(10);
         
-        return view('leaves.index', compact('leaves'));
+        // 🌟 ดึงข้อมูลประเภทการลาทั้งหมด
+        $leaveTypes = \App\Models\LeaveType::all();
+
+        // 🌟 ส่งตัวแปร leaveTypes แนบไปกับ leaves ด้วย
+        return view('leaves.index', compact('leaves', 'leaveTypes'));
     }
     
     public function store(Request $request)
     {
         $request->validate([
-            'leave_type' => 'required',
+            'leave_type_id' => 'required|exists:leave_types,id', // แก้ตรงนี้
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+            'reason' => 'required|string',
         ]);
 
-        // ตรวจสอบว่า ถ้าเป็น Admin/HR ให้ใช้ employee_id ที่เลือกจากฟอร์ม
-        // แต่ถ้าเป็นพนักงานทั่วไป ให้ใช้ ID ของตัวเองเท่านั้น
-        $employeeId = Gate::allows('access-admin') ? $request->employee_id : auth()->user()->employee->id;
-        
+        // โค้ดใหม่: ถ้าเป็น Admin และมีการเลือกพนักงานมา ให้ใช้ ID นั้น แต่ถ้าไม่มี ให้ใช้ ID ของตัวเอง
+        $employeeId = (Gate::allows('access-admin') && $request->filled('employee_id')) 
+                        ? $request->employee_id 
+                        : auth()->user()->employee->id;
+
         // สร้างใบลาโดยผูกกับพนักงานที่ Login อยู่
         Leave::create([
             'employee_id' => $employeeId,
-            'leave_type' => $request->leave_type,
+            'leave_type_id' => $request->leave_type_id, // และแก้ตรงนี้
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'reason' => $request->reason,
@@ -51,7 +57,7 @@ class LeaveController extends Controller
     }
 
     // แสดงหน้ารายการใบลา (สำหรับหัวหน้า)
-    public function approvals(Request $request)
+   public function approvals(Request $request)
     {
         // 🔒 ล็อคสิทธิ์: ต้องเป็นหัวหน้างานเท่านั้นถึงจะเข้าหน้านี้ได้
         Gate::authorize('is-manager');
@@ -62,8 +68,8 @@ class LeaveController extends Controller
         $search = $request->input('search');
         $statusFilter = $request->input('status', 'Pending'); 
 
-        // ดึงใบลาเฉพาะของลูกน้อง
-        $query = Leave::whereHas('employee', function($q) use ($user) {
+        // 🌟 ดึงข้อมูลใบลา พร้อมกับข้อมูล 'พนักงาน' และ 'ประเภทการลา' (แก้ตรงบรรทัดนี้ครับ 👇)
+        $query = Leave::with(['employee', 'leaveType'])->whereHas('employee', function($q) use ($user) {
             $q->where('manager_id', $user->employee->id);
         });
 

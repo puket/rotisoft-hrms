@@ -29,7 +29,7 @@
                             <tbody>
                                 @forelse($leaves as $leave)
                                 <tr>
-                                    <td><strong>{{ $leave->leave_type }}</strong></td>
+                                    <td><strong>{{ $leave->leaveType->name ?? '-' }}</strong></td>
                                     <td>{{ $leave->start_date }}</td>
                                     <td>{{ $leave->end_date }}</td>
                                     <td><small class="text-muted">{{ Str::limit($leave->reason, 30) }}</small></td>
@@ -62,6 +62,7 @@
 </div>
 
 <div class="modal fade" id="leaveModal" tabindex="-1" aria-hidden="true">
+
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header bg-primary text-white border-0">
@@ -71,12 +72,24 @@
             <form action="/leaves" method="POST">
                 @csrf
                 <div class="modal-body p-4">
+                    @if ($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            <strong>เกิดข้อผิดพลาด:</strong>
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
                     <div class="mb-3">
                         <label class="form-label fw-bold">ประเภทการลา <span class="text-danger">*</span></label>
-                        <select name="leave_type" class="form-select" required>
-                            <option value="ลาป่วย">ลาป่วย (Sick Leave)</option>
-                            <option value="ลากิจ">ลากิจ (Casual Leave)</option>
-                            <option value="ลาพักร้อน">ลาพักร้อน (Vacation Leave)</option>
+                        <select name="leave_type_id" class="form-select" required>
+                            <option value="">-- เลือกประเภทการลา --</option>
+                            @foreach($leaveTypes as $type)
+                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="row mb-3">

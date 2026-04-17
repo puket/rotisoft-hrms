@@ -173,4 +173,47 @@ public function index(Request $request)
         // บันทึกเสร็จให้เด้งกลับไปหน้ารายชื่อ พร้อมส่งข้อความแจ้งเตือน
         return redirect('/employees')->with('success', 'เพิ่มพนักงานใหม่ และสร้างบัญชี ESS สำเร็จแล้ว!');
     }
+
+    // ==========================================
+    // 🌟 ระบบผังองค์กร (Organization Chart)
+    // ==========================================
+    public function orgChart()
+    {
+        // 🔒 ทุกคนที่เข้าระบบได้ ควรเห็นผังบริษัทตัวเอง (เพื่อให้รู้ว่าใครเป็นหัวหน้าใคร)
+        $employees = \App\Models\Employee::with(['department', 'position'])
+                        ->where('status', 'Active')
+                        ->get();
+
+        $chartData = [];
+
+        foreach ($employees as $emp) {
+            // ดึง ID ของหัวหน้า (ถ้าไม่มีให้เป็นค่าว่างแปลว่าเป็นเบอร์ 1 ของบริษัท)
+            $managerId = $emp->manager_id ? (string)$emp->manager_id : '';
+            
+            // เตรียมข้อมูลสำหรับโชว์ในการ์ดแต่ละใบ (ใช้ HTML ได้เลย)
+            $name = $emp->first_name . ' ' . $emp->last_name;
+            $position = $emp->position ? $emp->position->title : 'ไม่มีตำแหน่ง';
+            $department = $emp->department ? $emp->department->name : '-';
+            
+            // ตกแต่งหน้าตาของการ์ด (Node)
+            $formattedLabel = "
+                <div class='text-center px-2 py-1'>
+                    <strong class='text-primary'>{$name}</strong><br>
+                    <small class='text-secondary'>{$position}</small><br>
+                    <span class='badge bg-light text-dark border mt-1'>🏢 {$department}</span>
+                </div>
+            ";
+
+            // ใส่ข้อมูลลง Array ตามรูปแบบที่ Google Charts ต้องการ
+            // [ [ ID, HTML Layout ], Manager_ID, Tooltip ]
+            $chartData[] = [
+                ['v' => (string)$emp->id, 'f' => $formattedLabel],
+                $managerId,
+                $position
+            ];
+        }
+
+        return view('employees.org-chart', compact('chartData'));
+    }
+    
 }
