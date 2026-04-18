@@ -9,6 +9,7 @@ use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\OtRequestController;
+use App\Http\Controllers\ShiftController;
 
 // 1. ปิดระบบ Register
 Auth::routes(['register' => false]);
@@ -26,7 +27,35 @@ Route::middleware(['auth', 'can:access-admin'])->group(function () {
     // ต้องมี ->name(...) ต่อท้ายแบบนี้เป๊ะๆ นะครับ
     Route::get('/admin/ot-settings', [App\Http\Controllers\OtSettingController::class, 'index'])->name('ot-settings.index');
     Route::post('/admin/ot-settings', [App\Http\Controllers\OtSettingController::class, 'store'])->name('ot-settings.store');
+    
+    Route::put('/admin/ot-settings/{id}', [App\Http\Controllers\OtSettingController::class, 'update'])->name('ot-settings.update');
+    Route::delete('/admin/ot-settings/{id}', [App\Http\Controllers\OtSettingController::class, 'destroy'])->name('ot-settings.destroy');
+
 });
+
+Route::middleware(['auth', 'can:access-admin'])->group(function () {
+    Route::get('/admin/ot-settings', [App\Http\Controllers\OtSettingController::class, 'index'])->name('ot-settings.index');
+    Route::post('/admin/ot-settings', [App\Http\Controllers\OtSettingController::class, 'store'])->name('ot-settings.store');
+    
+    // 🌟 เพิ่ม 2 บรรทัดนี้
+    Route::put('/admin/ot-settings/{id}', [App\Http\Controllers\OtSettingController::class, 'update'])->name('ot-settings.update');
+    Route::delete('/admin/ot-settings/{id}', [App\Http\Controllers\OtSettingController::class, 'destroy'])->name('ot-settings.destroy');
+});
+Route::middleware(['auth', 'can:edit-employees'])->group(function () {
+    // 🌟 เพิ่มกลุ่ม Route สำหรับจัดการกะการทำงาน (Shifts)
+    Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
+    Route::post('/shifts', [ShiftController::class, 'store'])->name('shifts.store');
+    Route::put('/shifts/{id}', [ShiftController::class, 'update'])->name('shifts.update');
+    Route::delete('/shifts/{id}', [ShiftController::class, 'destroy'])->name('shifts.destroy');
+
+    // ระบบตั้งค่าวันหยุดบริษัท (HR/Admin)
+    Route::get('/holidays', [\App\Http\Controllers\HolidayController::class, 'index'])->name('holidays.index');
+    Route::post('/holidays', [\App\Http\Controllers\HolidayController::class, 'store'])->name('holidays.store');
+    Route::put('/holidays/{id}', [\App\Http\Controllers\HolidayController::class, 'update'])->name('holidays.update');
+    Route::delete('/holidays/{id}', [\App\Http\Controllers\HolidayController::class, 'destroy'])->name('holidays.destroy');
+
+});
+
 
 Route::middleware(['auth'])->group(function () {
 
@@ -76,17 +105,21 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/organization-chart', [\App\Http\Controllers\EmployeeController::class, 'orgChart']);
 
     // ระบบจัดการกะการทำงาน (HR/Admin)
-    Route::get('/shifts', [\App\Http\Controllers\ShiftController::class, 'index']);
-    Route::post('/shifts', [\App\Http\Controllers\ShiftController::class, 'store']);
-    Route::delete('/shifts/{id}', [\App\Http\Controllers\ShiftController::class, 'destroy']);
+    //Route::get('/shifts', [\App\Http\Controllers\ShiftController::class, 'index']);
+    //Route::post('/shifts', [\App\Http\Controllers\ShiftController::class, 'store']);
+    //Route::delete('/shifts/{id}', [\App\Http\Controllers\ShiftController::class, 'destroy']);
+    //Route::put('/shifts/{id}', [App\Http\Controllers\ShiftController::class, 'update'])->name('shifts.update');
     
     // ระบบมอบหมายกะการทำงาน (HR/Admin)
     Route::get('/shift-assignments', [\App\Http\Controllers\ShiftAssignmentController::class, 'index']);
     Route::post('/shift-assignments', [\App\Http\Controllers\ShiftAssignmentController::class, 'store']);
     
-    // ปฏิทินตารางทำงาน (My Schedule)
+    // ปฏิทินตารางทำงาน (My Schedule แบบ Calendar)
     Route::get('/my-schedule', [\App\Http\Controllers\ScheduleController::class, 'index']);
     Route::get('/api/schedules', [\App\Http\Controllers\ScheduleController::class, 'getEvents']);
+    
+    // 🌟 เพิ่มบรรทัดนี้: หน้าตารางการทำงาน (แบบรายการ)
+    Route::get('/schedules/table', [\App\Http\Controllers\ScheduleController::class, 'tableView'])->name('schedules.table');
 
     // ==========================================
     // ระบบขอทำล่วงเวลา (OT Plan)

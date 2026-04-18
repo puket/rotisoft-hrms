@@ -13,6 +13,8 @@
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
@@ -30,32 +32,40 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
-                        
+                        <!--
                         <li class="nav-item">
                             <a class="nav-link fw-bold text-primary" href="/home">📊 แดชบอร์ด</a>
-                        </li>
+                        </li>-->
 
                         @can('access-admin')
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-gear-fill"></i> ตั้งค่าระบบ
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('ot-settings.index') }}">
-                                            <i class="bi bi-clock-history me-2"></i> ตั้งค่า OT
-                                        </a>
-                                    </li>
-                                    
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" href="/admin/departments">
-                                            <i class="bi bi-building me-2"></i> จัดการแผนก
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        @endcan
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-gear-fill"></i> ตั้งค่าระบบ
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('ot-settings.index') }}">
+                                        <i class="bi bi-clock-history me-2"></i> ตั้งค่า OT
+                                    </a>
+                                </li>
+
+                                @can('edit-employees')
+                                <li>
+                                    <a class="dropdown-item {{ request()->is('holidays*') ? 'active' : '' }}" href="{{ route('holidays.index') }}">
+                                        <i class="bi bi-calendar-check me-2"></i> วันหยุดบริษัท
+                                    </a>
+                                </li>
+                                @endcan
+                                
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="/admin/departments">
+                                        <i class="bi bi-building me-2"></i> จัดการแผนก
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    @endcan
 
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle fw-bold text-success" href="#" role="button" data-bs-toggle="dropdown">
@@ -114,6 +124,7 @@
                                     <li><a class="dropdown-item fw-bold" href="/attendance-report">📊 รายงานการลงเวลา (Report)</a></li>
                                     <li><a class="dropdown-item" href="/shifts">⚙️ จัดการกะการทำงาน (Shifts)</a></li>
                                     <li><a class="dropdown-item" href="/shift-assignments">🧑‍💼 มอบหมายกะพนักงาน</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('schedules.table') }}">📅 ตารางการทำงานแบบรายการ</a></li>
                                 @endcan
                             </ul>
                         </li>

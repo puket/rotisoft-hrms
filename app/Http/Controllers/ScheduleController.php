@@ -79,4 +79,45 @@ class ScheduleController extends Controller
 
         return response()->json($events);
     }
+
+    // 🌟 ฟังก์ชันใหม่: แสดงหน้าตารางการทำงาน (แบบ List/Table)
+    public function tableView(Request $request)
+    {
+        $user = auth()->user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return redirect('/home')->with('error', 'บัญชีนี้ยังไม่ได้ผูกกับข้อมูลพนักงาน');
+        }
+
+        // รับค่าเดือน/ปี (ค่าเริ่มต้นคือเดือนปัจจุบัน)
+        $month = $request->month ?? date('m');
+        $year = $request->year ?? date('Y');
+        
+        // ค่าเริ่มต้น: ดึง ID ของตัวเอง
+        $viewEmployeeId = $employee->id;
+
+        // ถ้ามีสิทธิ์ HR และมีการเลือกดูพนักงานคนอื่น
+        if ($request->has('employee_id') && Gate::allows('edit-employees')) {
+            $viewEmployeeId = $request->employee_id;
+        }
+
+        $viewEmployee = Employee::findOrFail($viewEmployeeId);
+
+        // ดึงรายการตารางงานตามเดือนที่เลือก
+        $schedules = EmployeeSchedule::with('shift')
+            ->where('employee_id', $viewEmployeeId)
+            ->whereMonth('work_date', $month)
+            ->whereYear('work_date', $year)
+            ->orderBy('work_date', 'asc')
+            ->get();
+
+        // ดึงรายชื่อพนักงานทั้งหมดให้ HR เลือกใน Dropdown
+        $employeesList = [];
+        if (Gate::allows('edit-employees')) {
+            $employeesList = Employee::where('status', 'Active')->orderBy('first_name')->get();
+        }
+
+        return view('schedules.table', compact('viewEmployee', 'schedules', 'employeesList', 'month', 'year'));
+    }
 }

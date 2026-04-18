@@ -23,24 +23,65 @@ class ShiftController extends Controller
     {
         Gate::authorize('edit-employees');
 
-        $request->validate([
+        $validated = $request->validate([
+            'shift_code' => 'nullable|string|max:50|unique:shifts,shift_code',
             'name' => 'required|string|max:255|unique:shifts,name',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i',
+            'normal_work_hours' => 'required|numeric|min:0',
+            'break_start_time' => 'nullable|date_format:H:i',
+            'break_end_time' => 'nullable|date_format:H:i',
+            'break_hours' => 'nullable|numeric|min:0',
+            'ot_before_start_time' => 'nullable|date_format:H:i',
+            'ot_before_end_time' => 'nullable|date_format:H:i',
+            'ot_after_start_time' => 'nullable|date_format:H:i',
+            'ot_after_end_time' => 'nullable|date_format:H:i',
         ], [
             'name.required' => 'กรุณากรอกชื่อกะการทำงาน',
             'name.unique' => 'ชื่อกะนี้มีในระบบแล้ว กรุณาใช้ชื่ออื่น',
             'start_time.required' => 'กรุณาระบุเวลาเริ่มงาน',
             'end_time.required' => 'กรุณาระบุเวลาเลิกงาน',
+            'normal_work_hours.required' => 'กรุณาระบุจำนวนชั่วโมงทำงานปกติ',
         ]);
 
-        Shift::create([
-            'name' => $request->name,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
-        ]);
+        // ใช้ข้อมูลที่ผ่านการตรวจสอบแล้วบันทึกลงฐานข้อมูลได้เลย
+        Shift::create($validated);
 
         return redirect()->back()->with('success', 'สร้างกะการทำงานใหม่เรียบร้อยแล้ว ✅');
+    }
+
+    // อัปเดตข้อมูลกะการทำงาน
+    public function update(Request $request, $id)
+    {
+        Gate::authorize('edit-employees');
+
+        $shift = Shift::findOrFail($id);
+
+        $validated = $request->validate([
+            // อนุญาตให้ใช้ shift_code และ name เดิมของตัวเองได้
+            'shift_code' => 'nullable|string|max:50|unique:shifts,shift_code,' . $shift->id,
+            'name' => 'required|string|max:255|unique:shifts,name,' . $shift->id,
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i',
+            'normal_work_hours' => 'required|numeric|min:0',
+            'break_start_time' => 'nullable|date_format:H:i',
+            'break_end_time' => 'nullable|date_format:H:i',
+            'break_hours' => 'nullable|numeric|min:0',
+            'ot_before_start_time' => 'nullable|date_format:H:i',
+            'ot_before_end_time' => 'nullable|date_format:H:i',
+            'ot_after_start_time' => 'nullable|date_format:H:i',
+            'ot_after_end_time' => 'nullable|date_format:H:i',
+        ], [
+            'name.required' => 'กรุณากรอกชื่อกะการทำงาน',
+            'name.unique' => 'ชื่อกะนี้มีในระบบแล้ว กรุณาใช้ชื่ออื่น',
+            'start_time.required' => 'กรุณาระบุเวลาเริ่มงาน',
+            'end_time.required' => 'กรุณาระบุเวลาเลิกงาน',
+            'normal_work_hours.required' => 'กรุณาระบุจำนวนชั่วโมงทำงานปกติ',
+        ]);
+
+        $shift->update($validated);
+
+        return redirect()->back()->with('success', 'อัปเดตข้อมูลกะการทำงานเรียบร้อยแล้ว ✅');
     }
 
     // ลบกะการทำงาน (สำหรับอนาคตถ้าต้องการใช้)
@@ -50,4 +91,5 @@ class ShiftController extends Controller
         Shift::findOrFail($id)->delete();
         return redirect()->back()->with('success', 'ลบกะการทำงานเรียบร้อยแล้ว 🗑️');
     }
+    
 }
