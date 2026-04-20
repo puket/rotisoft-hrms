@@ -169,3 +169,6 @@ Route::get('/debug-manager', function() {
         '6. ผลการเช็คสิทธิ์ is-manager' => \Illuminate\Support\Facades\Gate::allows('is-manager') ? 'ผ่าน (True)' : 'ไม่ผ่าน (False)'
     ], 200, ['Content-Type' => 'application/json;charset=UTF-8'], JSON_UNESCAPED_UNICODE);
 });
+
+Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
+Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');

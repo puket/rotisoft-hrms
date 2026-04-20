@@ -44,15 +44,16 @@ public function index(Request $request)
 
     public function show($id)
     {
-        Gate::authorize('view-employees-menu');
-        
-        $employee = Employee::findOrFail($id);
-        $user = auth()->user();
-
-        // 🔒 เช็คสิทธิ์ดูข้อมูล: ถ้าไม่ใช่ HR/Admin และไม่ใช่หัวหน้างานของคนๆ นี้ จะดูไม่ได้
-        if (!Gate::allows('view-all-employees') && $employee->manager_id !== $user->employee->id) {
-            abort(403, 'คุณไม่มีสิทธิ์เข้าดูข้อมูลพนักงานท่านนี้');
-        }
+        // ดึงข้อมูลพนักงาน พร้อมกับข้อมูลแผนก, ตำแหน่ง, หัวหน้างาน และประวัติต่างๆ
+        $employee = Employee::with([
+            'department', 
+            'position', 
+            'manager', 
+            'educations', 
+            'experiences', 
+            'trainings', 
+            'documents'
+        ])->findOrFail($id);
 
         return view('employees.show', compact('employee'));
     }

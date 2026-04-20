@@ -29,8 +29,8 @@ class DatabaseSeeder extends Seeder
         // รวบรวมตำแหน่งทั้งหมดไว้สุ่ม
         $positions = [$itDev, $itSupport, $hrManager, $hrOfficer, $salesManager, $salesExec];
 
-        // 4. สร้างพนักงาน 30 คน แล้วสุ่มจับยัดลงตำแหน่งที่ถูกต้อง (แผนกจะถูกผูกให้อัตโนมัติ)
-        Employee::factory(30)->create()->each(function ($employee) use ($positions) {
+        // 4. สร้างพนักงาน 20 คน แล้วสุ่มจับยัดลงตำแหน่งที่ถูกต้อง (แผนกจะถูกผูกให้อัตโนมัติ)
+        Employee::factory(20)->create()->each(function ($employee) use ($positions) {
             $randomPosition = $positions[array_rand($positions)];
             
             $employee->update([

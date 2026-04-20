@@ -54,4 +54,33 @@ class Employee extends Model
     {
         return $this->hasMany(Payroll::class);
     }
+    
+    // ==========================================
+    // 🔗 ความสัมพันธ์กับประวัติต่างๆ (1 พนักงาน มีหลายประวัติ)
+    // ==========================================
+    public function educations()
+    {
+        return $this->hasMany(EmployeeEducation::class);
+    }
+
+    public function experiences()
+    {
+        return $this->hasMany(EmployeeExperience::class);
+    }
+
+    public function trainings()
+    {
+        return $this->hasMany(EmployeeTraining::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(EmployeeDocument::class);
+    }
+
+    public function subordinates()
+    {
+        // พนักงานคนนี้ "มีลูกน้องคือ..." (ถ้าเขาเป็นผู้จัดการ)
+        return $this->hasMany(Employee::class, 'manager_id');
+    }
 }
