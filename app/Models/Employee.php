@@ -83,4 +83,6 @@ class Employee extends Model
         // พนักงานคนนี้ "มีลูกน้องคือ..." (ถ้าเขาเป็นผู้จัดการ)
         return $this->hasMany(Employee::class, 'manager_id');
     }
+
+    
 }

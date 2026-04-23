@@ -11,7 +11,7 @@
 
                 <div class="card-body p-4">
                     @if ($errors->any())
-                        <div class="alert alert-danger">
+                        <div class="alert alert-danger" id="error-box">
                             <ul class="mb-0">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
@@ -20,77 +20,209 @@
                         </div>
                     @endif
 
-                    <form action="/employees" method="POST">
+                    <form action="{{ url('/employees') }}" method="POST" novalidate>
                         @csrf
-                        
-                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">1. ข้อมูลส่วนตัวพนักงาน</h6>
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label">รหัสพนักงาน (Employee Code) <span class="text-danger">*</span></label>
-                                <input type="text" name="employee_code" class="form-control" placeholder="เช่น EMP-001" required>
+
+                        {{-- 📇 หมวดที่ 1: ข้อมูลส่วนตัว --}}
+                        <div class="card shadow-sm mb-4 border-0">
+                            <div class="card-header bg-white fw-bold text-primary pb-0 border-0 pt-3">
+                                <h5><i class="fas fa-user"></i> ข้อมูลส่วนตัว</h5><hr>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">ชื่อจริง (First Name) <span class="text-danger">*</span></label>
-                                <input type="text" name="first_name" class="form-control" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">นามสกุล (Last Name) <span class="text-danger">*</span></label>
-                                <input type="text" name="last_name" class="form-control" required>
+                            <div class="card-body pt-0">
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">รหัสพนักงาน <span class="text-danger">*</span></label>
+                                        <input type="text" name="employee_code" class="form-control" value="{{ old('employee_code') }}" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">ชื่อ <span class="text-danger">*</span></label>
+                                        <input type="text" name="first_name" class="form-control" value="{{ old('first_name') }}" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">นามสกุล <span class="text-danger">*</span></label>
+                                        <input type="text" name="last_name" class="form-control" value="{{ old('last_name') }}" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">เพศ</label>
+                                        <select name="gender" class="form-select">
+                                            <option value="">-- เลือกเพศ --</option>
+                                            <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>ชาย</option>
+                                            <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>หญิง</option>
+                                            <option value="Other" {{ old('gender') == 'Other' ? 'selected' : '' }}>อื่นๆ</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">วันเกิด</label>
+                                        <input type="date" name="date_of_birth" class="form-control" value="{{ old('date_of_birth') }}">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">เลขบัตร ปชช.</label>
+                                        <input type="text" name="national_id" class="form-control" value="{{ old('national_id') }}">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">สถานภาพ</label>
+                                        <select name="marital_status" class="form-select">
+                                            <option value="">-- เลือก --</option>
+                                            <option value="Single" {{ old('marital_status') == 'Single' ? 'selected' : '' }}>โสด</option>
+                                            <option value="Married" {{ old('marital_status') == 'Married' ? 'selected' : '' }}>สมรส</option>
+                                            <option value="Divorced" {{ old('marital_status') == 'Divorced' ? 'selected' : '' }}>หย่าร้าง</option>
+                                            <option value="Widowed" {{ old('marital_status') == 'Widowed' ? 'selected' : '' }}>หม้าย</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">จำนวนบุตร (คน)</label>
+                                        <input type="number" name="children_count" class="form-control" value="{{ old('children_count', 0) }}" min="0">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label">เบอร์โทรศัพท์ (Phone)</label>
-                                <input type="text" name="phone" class="form-control">
+                        {{-- 📞 หมวดที่ 2: ข้อมูลการติดต่อ --}}
+                        <div class="card shadow-sm mb-4 border-0">
+                            <div class="card-header bg-white fw-bold text-success pb-0 border-0 pt-3">
+                                <h5><i class="fas fa-address-book"></i> ข้อมูลการติดต่อ</h5><hr>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">วันที่เริ่มงาน (Hire Date) <span class="text-danger">*</span></label>
-                                <input type="date" name="hire_date" class="form-control" required>
-                            </div>
-                        </div>
-
-                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">2. ข้อมูลองค์กร (Organization)</h6>
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <label class="form-label">แผนก (Department) <span class="text-danger">*</span></label>
-                                <select name="department_id" class="form-select" required>
-                                    <option value="">-- เลือกแผนก --</option>
-                                    @foreach($departments as $dept)
-                                        <option value="{{ $dept->id }}">{{ $dept->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">ตำแหน่ง (Position) <span class="text-danger">*</span></label>
-                                <select name="position_id" class="form-select" required>
-                                    <option value="">-- เลือกตำแหน่ง --</option>
-                                    @foreach($positions as $pos)
-                                        <option value="{{ $pos->id }}">{{ $pos->title }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">หัวหน้างาน (Report To)</label>
-                                <select name="manager_id" class="form-select">
-                                    <option value="">-- ไม่มี (เป็นระดับสูงสุด) --</option>
-                                    @foreach($managers as $mgr)
-                                        <option value="{{ $mgr->id }}">{{ $mgr->first_name }} {{ $mgr->last_name }} ({{ $mgr->position ? $mgr->position->title : 'ไม่มีตำแหน่ง' }})</option>
-                                    @endforeach
-                                </select>
-                                <small class="text-muted">พนักงานทั่วไปต้องเลือก Manager, ส่วน Manager ให้เลือก MD</small>
+                            <div class="card-body pt-0">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">อีเมลติดต่อ (Contact Email)</label>
+                                        <input type="email" name="email" id="contact_email" class="form-control" value="{{ old('email') }}">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">เบอร์โทรศัพท์</label>
+                                        <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number') }}">
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold">ที่อยู่</label>
+                                        <textarea name="address" class="form-control" rows="2">{{ old('address') }}</textarea>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">ชื่อผู้ติดต่อฉุกเฉิน</label>
+                                        <input type="text" name="emergency_contact_name" class="form-control" value="{{ old('emergency_contact_name') }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">เบอร์โทรผู้ติดต่อฉุกเฉิน</label>
+                                        <input type="text" name="emergency_contact_phone" class="form-control" value="{{ old('emergency_contact_phone') }}">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <h6 class="text-success fw-bold mb-3 border-bottom pb-2">3. บัญชีเข้าระบบ (ESS / MSS Account)</h6>
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label">อีเมลเข้าสู่ระบบ (Email) <span class="text-danger">*</span></label>
-                                <input type="email" name="email" class="form-control" placeholder="employee@rotisoft.com" required>
+                        {{-- 💼 หมวดที่ 3: ข้อมูลการจ้างงาน --}}
+                        <div class="card shadow-sm mb-4 border-0">
+                            <div class="card-header bg-white fw-bold text-warning pb-0 border-0 pt-3">
+                                <h5><i class="fas fa-briefcase"></i> ข้อมูลการจ้างงาน</h5><hr>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">รหัสผ่านเริ่มต้น (Password) <span class="text-danger">*</span></label>
-                                <input type="password" name="password" class="form-control" placeholder="ตั้งรหัสผ่านอย่างน้อย 6 ตัว" required>
+                            <div class="card-body pt-0">
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">แผนก</label>
+                                        <select name="department_id" class="form-select">
+                                            <option value="">-- เลือกแผนก --</option>
+                                            @foreach($departments as $dept)
+                                                <option value="{{ $dept->id }}" {{ old('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">ตำแหน่ง</label>
+                                        <select name="position_id" class="form-select">
+                                            <option value="">-- เลือกตำแหน่ง --</option>
+                                            @foreach($positions as $pos)
+                                                <option value="{{ $pos->id }}" {{ old('position_id') == $pos->id ? 'selected' : '' }}>{{ $pos->title }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">หัวหน้างาน</label>
+                                        <select name="manager_id" class="form-select">
+                                            <option value="">-- ไม่มีหัวหน้า --</option>
+                                            @foreach($managers as $mgr)
+                                                <option value="{{ $mgr->id }}" {{ old('manager_id') == $mgr->id ? 'selected' : '' }}>{{ $mgr->first_name }} {{ $mgr->last_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">ประเภทพนักงาน <span class="text-danger">*</span></label>
+                                        <select name="employee_type" class="form-select" required>
+                                            <option value="Monthly" {{ old('employee_type') == 'Monthly' ? 'selected' : '' }}>รายเดือน</option>
+                                            <option value="Daily" {{ old('employee_type') == 'Daily' ? 'selected' : '' }}>รายวัน</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">สถานะการทำงาน <span class="text-danger">*</span></label>
+                                        <select name="status" class="form-select" required>
+                                            <option value="Active" {{ old('status', 'Active') == 'Active' ? 'selected' : '' }}>Active (ทำงานอยู่)</option>
+                                            <option value="Suspended" {{ old('status') == 'Suspended' ? 'selected' : '' }}>Suspended (พักงาน)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">สถานะพนักงาน <span class="text-danger">*</span></label>
+                                        <select name="employment_status" class="form-select" required>
+                                            <option value="Probation" {{ old('employment_status', 'Probation') == 'Probation' ? 'selected' : '' }}>ทดลองงาน</option>
+                                            <option value="Permanent" {{ old('employment_status') == 'Permanent' ? 'selected' : '' }}>พนักงานประจำ</option>
+                                            <option value="Contract" {{ old('employment_status') == 'Contract' ? 'selected' : '' }}>สัญญาจ้าง</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">วันที่เริ่มงาน <span class="text-danger">*</span></label>
+                                        <input type="date" name="hire_date" class="form-control" value="{{ old('hire_date') }}" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">วันที่ผ่านโปร</label>
+                                        <input type="date" name="probation_end_date" class="form-control" value="{{ old('probation_end_date') }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- 💰 หมวดที่ 4: ข้อมูลการเงินและสวัสดิการ --}}
+                        <div class="card shadow-sm mb-4 border-0">
+                            <div class="card-header bg-white fw-bold text-info pb-0 border-0 pt-3">
+                                <h5><i class="fas fa-money-check-alt"></i> ข้อมูลการเงินและสวัสดิการ</h5><hr>
+                            </div>
+                            <div class="card-body pt-0">
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">ชื่อธนาคาร</label>
+                                        <input type="text" name="bank_name" class="form-control" value="{{ old('bank_name') }}">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">เลขที่บัญชี</label>
+                                        <input type="text" name="bank_account" class="form-control" value="{{ old('bank_account') }}">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">เลขประจำตัวผู้เสียภาษี</label>
+                                        <input type="text" name="tax_id" class="form-control" value="{{ old('tax_id') }}">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">เลขประกันสังคม</label>
+                                        <input type="text" name="social_security_number" class="form-control" value="{{ old('social_security_number') }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- 🔐 หมวดที่ 5: บัญชีเข้าระบบ (ESS / MSS Account) --}}
+                        <div class="card shadow-sm mb-4 border-0">
+                            <div class="card-header bg-white fw-bold text-danger pb-0 border-0 pt-3">
+                                <h5><i class="fas fa-key"></i> บัญชีเข้าระบบ (ESS / MSS Account)</h5><hr>
+                            </div>
+                            <div class="card-body pt-0">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">อีเมลเข้าสู่ระบบ (Login Email)</label>
+                                        {{-- เปลี่ยน name เป็น user_email และใส่ id="login_email" --}}
+                                        <input type="email" name="user_email" id="login_email" class="form-control" value="{{ old('user_email') }}">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">รหัสผ่านเริ่มต้น (Password) <span class="text-danger">*</span></label>
+                                        <input type="password" name="password" class="form-control" placeholder="ตั้งรหัสผ่านอย่างน้อย 6 ตัว" required>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -104,4 +236,18 @@
         </div>
     </div>
 </div>
+<script>
+    // 1. ดักจับการพิมพ์ที่ช่อง "อีเมลติดต่อ"
+    document.getElementById('contact_email').addEventListener('input', function() {
+        document.getElementById('login_email').value = this.value;
+    });
+
+    // 2. ถ้ามีกล่อง Error ให้เลื่อนหน้าจอขึ้นไปด้านบนสุดแบบนุ่มนวล
+    window.onload = function() {
+        let errorBox = document.getElementById('error-box');
+        if (errorBox) {
+            errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    };
+</script>
 @endsection

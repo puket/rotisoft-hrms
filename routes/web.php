@@ -42,6 +42,17 @@ Route::middleware(['auth', 'can:access-admin'])->group(function () {
     Route::delete('/admin/ot-settings/{id}', [App\Http\Controllers\OtSettingController::class, 'destroy'])->name('ot-settings.destroy');
 });
 Route::middleware(['auth', 'can:edit-employees'])->group(function () {
+    
+    // บันทึกประวัติการศึกษา
+    Route::post('/employees/{id}/educations', [App\Http\Controllers\EmployeeController::class, 'storeEducation'])->name('employees.educations.store');
+    // บันทึกประวัติการทำงาน
+    Route::post('/employees/{id}/experiences', [App\Http\Controllers\EmployeeController::class, 'storeExperience']);
+    // บันทึกประวัติการฝึกอบรม
+    Route::post('/employees/{id}/trainings', [App\Http\Controllers\EmployeeController::class, 'storeTraining']);
+
+    // บันทึกเอกสารแนบและอัปโหลดไฟล์
+    Route::post('/employees/{id}/documents', [App\Http\Controllers\EmployeeController::class, 'storeDocument']);
+
     // 🌟 เพิ่มกลุ่ม Route สำหรับจัดการกะการทำงาน (Shifts)
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
     Route::post('/shifts', [ShiftController::class, 'store'])->name('shifts.store');

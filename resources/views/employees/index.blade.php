@@ -59,7 +59,7 @@
                                     <td>
                                         <strong>{{ $emp->first_name }} {{ $emp->last_name }}</strong><br>
                                         <small class="text-muted">📧 {{ $emp->email ?? '-' }}</small><br>
-                                        <small class="text-muted">📞 {{ $emp->phone ?? '-' }}</small>
+                                        <small class="text-muted">📞 {{ $emp->phone_number ?? '-' }}</small>
                                     </td>
                                     <td>
                                         <span class="badge bg-info text-dark mb-1">
