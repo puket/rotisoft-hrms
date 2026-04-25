@@ -30,6 +30,11 @@ Route::middleware(['auth', 'can:access-admin'])->group(function () {
     
     Route::put('/admin/ot-settings/{id}', [App\Http\Controllers\OtSettingController::class, 'update'])->name('ot-settings.update');
     Route::delete('/admin/ot-settings/{id}', [App\Http\Controllers\OtSettingController::class, 'destroy'])->name('ot-settings.destroy');
+    
+    // โมดูลจัดการองค์กร (Organization Management)
+    Route::resource('companies', App\Http\Controllers\CompanyController::class);
+    Route::resource('departments', App\Http\Controllers\DepartmentController::class);
+    Route::resource('positions', App\Http\Controllers\PositionController::class);
 
 });
 

@@ -44,13 +44,13 @@
                                 <i class="bi bi-gear-fill"></i> ตั้งค่าระบบ
                             </a>
                             <ul class="dropdown-menu">
+                                
+                                @can('edit-employees')
                                 <li>
                                     <a class="dropdown-item" href="{{ route('ot-settings.index') }}">
                                         <i class="bi bi-clock-history me-2"></i> ตั้งค่า OT
                                     </a>
                                 </li>
-
-                                @can('edit-employees')
                                 <li>
                                     <a class="dropdown-item {{ request()->is('holidays*') ? 'active' : '' }}" href="{{ route('holidays.index') }}">
                                         <i class="bi bi-calendar-check me-2"></i> วันหยุดบริษัท
@@ -59,11 +59,26 @@
                                 @endcan
                                 
                                 <li><hr class="dropdown-divider"></li>
+
                                 <li>
-                                    <a class="dropdown-item" href="/admin/departments">
+                                    <a class="dropdown-item" href="/companies">
+                                        <i class="bi bi-building me-2"></i> จัดการบริษัท
+                                    </a>
+                                </li>
+                                
+                                <li>
+                                    <a class="dropdown-item" href="/departments">
                                         <i class="bi bi-building me-2"></i> จัดการแผนก
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item" href="/positions">
+                                        <i class="bi bi-building me-2"></i> จัดการตำแหน่ง
+                                    </a>
+                                </li>
+                                @can('edit-employees')
+                                @endcan
+
                             </ul>
                         </li>
                     @endcan
