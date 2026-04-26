@@ -78,6 +78,13 @@ Route::middleware(['auth'])->group(function () {
     // หน้า Dashboard (หลังล็อกอิน)
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 
+    // ==========================================
+    // 🌟 API สำหรับทำ Dynamic Dropdown แผนกและตำแหน่ง
+    // ==========================================
+    Route::get('/get-departments/{company_id}', [App\Http\Controllers\EmployeeController::class, 'getDepartments']);
+    Route::get('/get-positions/{department_id}', [App\Http\Controllers\EmployeeController::class, 'getPositions']);
+    Route::get('/get-managers/{company_id}', [App\Http\Controllers\EmployeeController::class, 'getManagers']);
+    
     // หน้า ระบบพนักงาน
     Route::get('/employees', [EmployeeController::class, 'index']);
     // หน้าฟอร์มเพิ่มพนักงานใหม่

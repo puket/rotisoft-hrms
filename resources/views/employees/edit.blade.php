@@ -121,8 +121,19 @@
                         <div class="card-body pt-0">
                             <div class="row">
                                 <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold">สังกัดบริษัท <span class="text-danger">*</span></label>
+                                    <select name="company_id" id="company_id" class="form-select" required>
+                                        <option value="">-- เลือกบริษัท --</option>
+                                        @foreach($companies as $comp)
+                                            <option value="{{ $comp->id }}" {{ old('company_id', $employee->company_id) == $comp->id ? 'selected' : '' }}>
+                                                {{ $comp->comp_code }} : {{ $comp->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
                                     <label class="form-label fw-bold">แผนก</label>
-                                    <select name="department_id" class="form-select">
+                                    <select name="department_id" id="department_id" class="form-select">
                                         <option value="">-- เลือกแผนก --</option>
                                         @foreach($departments as $dept)
                                             <option value="{{ $dept->id }}" {{ old('department_id', $employee->department_id) == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
@@ -131,7 +142,7 @@
                                 </div>
                                 <div class="col-md-3 mb-3">
                                     <label class="form-label fw-bold">ตำแหน่ง</label>
-                                    <select name="position_id" class="form-select">
+                                    <select name="position_id" id="position_id" class="form-select">
                                         <option value="">-- เลือกตำแหน่ง --</option>
                                         @foreach($positions as $pos)
                                             <option value="{{ $pos->id }}" {{ old('position_id', $employee->position_id) == $pos->id ? 'selected' : '' }}>{{ $pos->title }}</option>
@@ -140,7 +151,7 @@
                                 </div>
                                 <div class="col-md-3 mb-3">
                                     <label class="form-label fw-bold">หัวหน้างาน</label>
-                                    <select name="manager_id" class="form-select">
+                                    <select name="manager_id" id="manager_id" class="form-select">
                                         <option value="">-- ไม่มีหัวหน้า --</option>
                                         @foreach($managers as $mgr)
                                             <option value="{{ $mgr->id }}" {{ old('manager_id', $employee->manager_id) == $mgr->id ? 'selected' : '' }}>{{ $mgr->first_name }} {{ $mgr->last_name }}</option>
@@ -226,7 +237,7 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">เปลี่ยนรหัสผ่านใหม่ (Password)</label>
                                     {{-- 🌟 จุดสำคัญ: ไม่ใส่ required และบอกว่าปล่อยว่างได้ --}}
-                                    <input type="password" name="password" class="form-control" placeholder="** ปล่อยว่างไว้ หากไม่ต้องการเปลี่ยนรหัสผ่าน **">
+                                    <input type="password" name="password" class="form-control" placeholder="** ปล่อยว่างไว้ หากไม่ต้องการเปลี่ยนรหัสผ่าน **" autocomplete="new-password">
                                     <small class="text-muted">หากต้องการรีเซ็ตรหัสผ่านให้พนักงาน ให้พิมพ์รหัสใหม่ที่นี่ (อย่างน้อย 6 ตัว)</small>
                                 </div>
                             </div>
@@ -248,6 +259,60 @@
     document.getElementById('contact_email').addEventListener('input', function() {
         // ให้ช่อง "อีเมลเข้าสู่ระบบ" เปลี่ยนตามทันที
         document.getElementById('login_email').value = this.value;
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        const companySelect = document.getElementById('company_id');
+        const departmentSelect = document.getElementById('department_id');
+        const positionSelect = document.getElementById('position_id');
+
+        // เมื่อมีการเปลี่ยนบริษัท
+        companySelect.addEventListener('change', function() {
+            let companyId = this.value;
+            
+            // ล้างค่า Dropdown แผนกและตำแหน่งรอไว้เลย
+            departmentSelect.innerHTML = '<option value="">-- กำลังโหลดข้อมูล... --</option>';
+            positionSelect.innerHTML = '<option value="">-- เลือกตำแหน่ง --</option>';
+
+            if(companyId) {
+                // เรียกข้อมูลแผนกผ่าน API ที่เราสร้างไว้
+                fetch(`/get-departments/${companyId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        departmentSelect.innerHTML = '<option value="">-- เลือกแผนก --</option>';
+                        data.forEach(dept => {
+                            departmentSelect.innerHTML += `<option value="${dept.id}">${dept.name}</option>`;
+                        });
+                    });
+            } else {
+                departmentSelect.innerHTML = '<option value="">-- กรุณาเลือกบริษัทก่อน --</option>';
+            }
+        });
+
+        // เมื่อมีการเปลี่ยนแผนก
+        departmentSelect.addEventListener('change', function() {
+            let departmentId = this.value;
+            
+            // ล้างค่า Dropdown ตำแหน่งรอไว้เลย
+            positionSelect.innerHTML = '<option value="">-- กำลังโหลดข้อมูล... --</option>';
+
+            if(departmentId) {
+                // เรียกข้อมูลตำแหน่งผ่าน API
+                fetch(`/get-positions/${departmentId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        positionSelect.innerHTML = '<option value="">-- เลือกตำแหน่ง --</option>';
+                        data.forEach(pos => {
+                            positionSelect.innerHTML += `<option value="${pos.id}">${pos.title}</option>`;
+                        });
+                    });
+            } else {
+                positionSelect.innerHTML = '<option value="">-- กรุณาเลือกแผนกก่อน --</option>';
+            }
+        });
+
     });
 </script>
 @endsection

@@ -6,6 +6,8 @@ use App\Models\Employee;
 use App\Models\Department;
 use App\Models\Position;
 use App\Models\User;
+use App\Models\Company;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -61,16 +63,15 @@ class EmployeeController extends Controller
 
     public function edit($id)
     {
-        // 🔒 เฉพาะ HR เท่านั้น
-        Gate::authorize('edit-employees');
+        $employee = \App\Models\Employee::findOrFail($id);
+        $companies = \App\Models\Company::where('status', 'Active')->get();
+        
+        // 🌟 ดึงข้อมูลเฉพาะของบริษัทและแผนกที่พนักงานคนนี้สังกัดอยู่ปัจจุบัน
+        $departments = \App\Models\Department::where('company_id', $employee->company_id)->get();
+        $positions = \App\Models\Position::where('department_id', $employee->department_id)->get();
+        $managers = \App\Models\Employee::where('company_id', $employee->company_id)->get();
 
-        $employee = Employee::findOrFail($id);
-        $departments = Department::all();
-        $positions = Position::all();
-        // ดึงพนักงานที่ Active เป็นตัวเลือกหัวหน้างาน (ยกเว้นตัวเอง) ดีมากครับโค้ดนี้!
-        $managers = Employee::where('status', 'Active')->where('id', '!=', $id)->get(); 
-
-        return view('employees.edit', compact('employee', 'departments', 'positions', 'managers'));
+        return view('employees.edit', compact('employee', 'companies', 'departments', 'positions', 'managers'));
     }
 
     public function update(Request $request, $id)
@@ -86,9 +87,7 @@ class EmployeeController extends Controller
             'employee_code' => 'required|unique:employees,employee_code,'.$id,
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-
             'email' => 'nullable|email|max:255',
-
             'gender' => 'nullable|in:Male,Female,Other',
             'date_of_birth' => 'nullable|date',
             'national_id' => 'nullable|string|max:20',
@@ -100,6 +99,7 @@ class EmployeeController extends Controller
             'emergency_contact_name' => 'nullable|string|max:255',
             'emergency_contact_phone' => 'nullable|string|max:20',
 
+            'company_id' => 'required|exists:companies,id',
             'department_id' => 'nullable|exists:departments,id',
             'position_id' => 'nullable|exists:positions,id',
             'manager_id' => 'nullable|exists:employees,id',
@@ -163,11 +163,12 @@ class EmployeeController extends Controller
         // ถ้าไม่มีสิทธิ์ access-admin ให้เด้งออกไปพร้อม Error 403 (Forbidden)
         Gate::authorize('access-admin');
 
-        $departments = Department::all();
-        $positions = Position::all();
-        $managers = Employee::where('status', 'Active')->get(); 
+        $companies = Company::where('status', 'Active')->get();
+        //$departments = Department::all();
+        //$positions = Position::all();
+        //$managers = Employee::where('status', 'Active')->get(); 
 
-        return view('employees.create', compact('departments', 'positions', 'managers'));
+        return view('employees.create', compact('companies'));
     }
 
     public function store(Request $request)
@@ -198,6 +199,7 @@ class EmployeeController extends Controller
             'emergency_contact_name' => 'nullable|string|max:255',
             'emergency_contact_phone' => 'nullable|string|max:20',
 
+            'company_id' => 'required|exists:companies,id',
             'department_id' => 'nullable|exists:departments,id',
             'position_id' => 'nullable|exists:positions,id',
             'manager_id' => 'nullable|exists:employees,id',
@@ -438,4 +440,26 @@ class EmployeeController extends Controller
         return back()->withErrors(['error' => 'ไม่พบไฟล์ที่อัปโหลด กรุณาลองใหม่อีกครั้ง']);
     }
     
+    // ดึงข้อมูลแผนกตาม ID บริษัทที่เลือก (ส่งกลับเป็น JSON)
+    public function getDepartments($company_id)
+    {
+        $departments = \App\Models\Department::where('company_id', $company_id)->get();
+        return response()->json($departments);
+    }
+
+    // ดึงข้อมูลตำแหน่งตาม ID แผนกที่เลือก (ส่งกลับเป็น JSON)
+    public function getPositions($department_id)
+    {
+        $positions = \App\Models\Position::where('department_id', $department_id)->get();
+        return response()->json($positions);
+    }
+    
+    // ดึงข้อมูลพนักงานในบริษัทเดียวกันมาเป็นตัวเลือกหัวหน้างาน
+    public function getManagers($company_id)
+    {
+        // ดึงพนักงานทุกคนในบริษัทนี้ (คุณอาจจะกรองเพิ่มเฉพาะคนที่เป็น Manager ก็ได้โดยเพิ่ม ->whereHas('position', ...))
+        $managers = \App\Models\Employee::where('company_id', $company_id)->get();
+        return response()->json($managers);
+    }
+
 }
