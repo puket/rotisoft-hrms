@@ -9,13 +9,10 @@ use Carbon\Carbon;
 
 class HolidayController extends Controller
 {
-    // แสดงรายการวันหยุด (แยกตามปี)
     public function index(Request $request)
     {
-        // รับค่าปีที่ต้องการดู (ถ้าไม่ส่งมา ให้ใช้ปีปัจจุบัน)
         $year = $request->year ?? date('Y');
         
-        // ดึงวันหยุดของปีที่เลือก เรียงตามวันที่
         $holidays = Holiday::whereYear('date', $year)
                         ->orderBy('date', 'asc')
                         ->get();
@@ -23,10 +20,10 @@ class HolidayController extends Controller
         return view('admin.holidays.index', compact('holidays', 'year'));
     }
 
-    // บันทึกวันหยุดใหม่
     public function store(Request $request)
     {
-        Gate::authorize('edit-employees'); // เฉพาะ HR/Admin
+        // 🌟 อัปเกรด Gate
+        Gate::authorize('is-tenant-admin');
 
         $request->validate([
             'date' => 'required|date|unique:holidays,date',
@@ -43,10 +40,10 @@ class HolidayController extends Controller
         return redirect()->back()->with('success', 'เพิ่มวันหยุดบริษัทเรียบร้อยแล้ว ✅');
     }
 
-    // อัปเดตข้อมูลวันหยุด
     public function update(Request $request, $id)
     {
-        Gate::authorize('edit-employees');
+        // 🌟 อัปเกรด Gate
+        Gate::authorize('is-tenant-admin');
 
         $holiday = Holiday::findOrFail($id);
 
@@ -61,10 +58,10 @@ class HolidayController extends Controller
         return redirect()->back()->with('success', 'อัปเดตข้อมูลวันหยุดเรียบร้อยแล้ว ✅');
     }
 
-    // ลบวันหยุด
     public function destroy($id)
     {
-        Gate::authorize('edit-employees');
+        // 🌟 อัปเกรด Gate
+        Gate::authorize('is-tenant-admin');
         Holiday::findOrFail($id)->delete();
         return redirect()->back()->with('success', 'ลบวันหยุดออกจากระบบเรียบร้อยแล้ว 🗑️');
     }

@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Tenantable;
 
 class OtRequest extends Model
 {
     use HasFactory;
-
+    use Tenantable;
+    
     protected $fillable = [
         'employee_id', 'work_date', 'start_time', 'end_time', 
         'reason', 'status', 'manager_id'

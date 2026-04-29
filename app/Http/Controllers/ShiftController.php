@@ -8,20 +8,17 @@ use Illuminate\Support\Facades\Gate;
 
 class ShiftController extends Controller
 {
-    // แสดงหน้าจัดการกะและรายการกะทั้งหมด
     public function index()
     {
-        // 🔒 ล็อคสิทธิ์: เฉพาะ HR เท่านั้น (ใช้สิทธิ์ edit-employees ที่เราเคยสร้างไว้)
-        Gate::authorize('edit-employees');
+        Gate::authorize('is-hr');
 
         $shifts = Shift::orderBy('start_time', 'asc')->get();
         return view('shifts.index', compact('shifts'));
     }
 
-    // บันทึกข้อมูลกะใหม่
     public function store(Request $request)
     {
-        Gate::authorize('edit-employees');
+        Gate::authorize('is-hr');
 
         $validated = $request->validate([
             'shift_code' => 'nullable|string|max:50|unique:shifts,shift_code',
@@ -44,21 +41,21 @@ class ShiftController extends Controller
             'normal_work_hours.required' => 'กรุณาระบุจำนวนชั่วโมงทำงานปกติ',
         ]);
 
-        // ใช้ข้อมูลที่ผ่านการตรวจสอบแล้วบันทึกลงฐานข้อมูลได้เลย
+        // 🌟 ยัด company_id ของผู้ใช้ที่ล็อกอินเข้าไปด้วย ตรงๆ เลย
+        $validated['company_id'] = auth()->user()->company_id;
+
         Shift::create($validated);
 
         return redirect()->back()->with('success', 'สร้างกะการทำงานใหม่เรียบร้อยแล้ว ✅');
     }
 
-    // อัปเดตข้อมูลกะการทำงาน
     public function update(Request $request, $id)
     {
-        Gate::authorize('edit-employees');
+        Gate::authorize('is-hr');
 
         $shift = Shift::findOrFail($id);
 
         $validated = $request->validate([
-            // อนุญาตให้ใช้ shift_code และ name เดิมของตัวเองได้
             'shift_code' => 'nullable|string|max:50|unique:shifts,shift_code,' . $shift->id,
             'name' => 'required|string|max:255|unique:shifts,name,' . $shift->id,
             'start_time' => 'required|date_format:H:i',
@@ -84,12 +81,10 @@ class ShiftController extends Controller
         return redirect()->back()->with('success', 'อัปเดตข้อมูลกะการทำงานเรียบร้อยแล้ว ✅');
     }
 
-    // ลบกะการทำงาน (สำหรับอนาคตถ้าต้องการใช้)
     public function destroy($id)
     {
-        Gate::authorize('edit-employees');
+        Gate::authorize('is-hr');
         Shift::findOrFail($id)->delete();
         return redirect()->back()->with('success', 'ลบกะการทำงานเรียบร้อยแล้ว 🗑️');
     }
-    
 }

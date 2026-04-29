@@ -22,6 +22,59 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // 1. เจ้าของระบบ (Super Admin)
+        \Illuminate\Support\Facades\Gate::define('is-super-admin', function ($user) {
+            return $user->role === 'super_admin';
+        });
+
+        // 2. แอดมินบริษัท (Tenant Admin) - จัดการตั้งค่าองค์กรและนโยบาย
+        \Illuminate\Support\Facades\Gate::define('is-tenant-admin', function ($user) {
+            return in_array($user->role, ['super_admin', 'tenant_admin']);
+        });
+
+        // 3. ฝ่ายบุคคล (HR) - จัดการพนักงาน กะ เงินเดือน
+        \Illuminate\Support\Facades\Gate::define('is-hr', function ($user) {
+            return in_array($user->role, ['super_admin', 'tenant_admin', 'hr']);
+        });
+
+        // 4. หัวหน้างาน (Manager) - อนุมัติเอกสาร ESS ของลูกน้อง
+        \Illuminate\Support\Facades\Gate::define('is-manager', function ($user) {
+            if (in_array($user->role, ['super_admin', 'tenant_admin', 'hr'])) return true;
+            return $user->employee && \App\Models\Employee::where('manager_id', $user->employee->id)->exists();
+        });
+    }
+    
+    public function xxbootx(): void
+    {
+        // 1. เจ้าของระบบ (Super Admin) - เข้าได้เฉพาะจัดการบริษัท
+        Gate::define('is-super-admin', function ($user) {
+            return $user->role === 'super_admin';
+        });
+
+        // 2. แอดมินบริษัท (Tenant Admin) - จัดการตั้งค่าองค์กรและนโยบาย
+        Gate::define('is-tenant-admin', function ($user) {
+            // Super Admin ก็ควรเข้ามาช่วยตั้งค่าให้ลูกค้าได้ในบางกรณี
+            return in_array($user->role, ['super_admin', 'tenant_admin']);
+        });
+
+        // 3. ฝ่ายบุคคล (HR) - จัดการพนักงาน กะ เงินเดือน
+        Gate::define('is-hr', function ($user) {
+            // ให้สิทธิ์คนที่ role เป็น 'hr', 'tenant_admin' และ 'super_admin'
+            return in_array($user->role, ['super_admin', 'tenant_admin', 'hr']);
+        });
+
+        // 4. หัวหน้างาน (Manager) - อนุมัติเอกสาร ESS ของลูกน้อง
+        Gate::define('is-manager', function ($user) {
+            // HR และ Admin สามารถอนุมัติแทนได้
+            if (in_array($user->role, ['super_admin', 'tenant_admin', 'hr'])) return true;
+            
+            // เช็คว่าเป็นหัวหน้างานจริงๆ หรือไม่ (มีลูกน้องผูก manager_id มาหา)
+            return $user->employee && \App\Models\Employee::where('manager_id', $user->employee->id)->exists();
+        });
+    }
+
+    public function bootxxx(): void
+    {
         // สิทธิ์เดิม (อาจจะเอาไว้ใช้กับเมนูอื่น)
         Gate::define('access-admin', function ($user) {
             if ($user->email === 'admin@rotisoft.com') return true;

@@ -10,15 +10,17 @@ class OtSettingController extends Controller
 {
     public function index()
     {
-        Gate::authorize('access-admin');
-        // ดึงข้อมูลเรียงตามวันที่เริ่มมีผล (ล่าสุดขึ้นก่อน)
+        // 🌟 อัปเกรด Gate
+        Gate::authorize('is-tenant-admin');
+        
         $settings = OtSetting::orderBy('effective_date', 'desc')->get();
         return view('admin.ot_settings.index', compact('settings'));
     }
 
     public function store(Request $request)
     {
-        Gate::authorize('access-admin');
+        // 🌟 อัปเกรด Gate
+        Gate::authorize('is-tenant-admin');
 
         $request->validate([
             'employee_type' => 'required|in:Daily,Monthly',
@@ -42,10 +44,10 @@ class OtSettingController extends Controller
         return redirect()->back()->with('success', 'เพิ่มการตั้งค่า OT เรียบร้อยแล้ว ✅');
     }
 
-    // 🌟 ฟังก์ชันอัปเดต (แก้ไข)
     public function update(Request $request, $id)
     {
-        Gate::authorize('access-admin');
+        // 🌟 อัปเกรด Gate
+        Gate::authorize('is-tenant-admin');
 
         $setting = OtSetting::findOrFail($id);
 
@@ -71,10 +73,10 @@ class OtSettingController extends Controller
         return redirect()->back()->with('success', 'อัปเดตการตั้งค่า OT เรียบร้อยแล้ว ✅');
     }
 
-    // 🌟 ฟังก์ชันลบ
     public function destroy($id)
     {
-        Gate::authorize('access-admin');
+        // 🌟 อัปเกรด Gate
+        Gate::authorize('is-tenant-admin');
         OtSetting::findOrFail($id)->delete();
         return redirect()->back()->with('success', 'ลบการตั้งค่า OT เรียบร้อยแล้ว 🗑️');
     }

@@ -4,10 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Tenantable;
+
 
 class ShiftAssignment extends Model
 {
     use HasFactory;
+    use Tenantable;
+    
     protected $fillable = ['employee_id', 'shift_id', 'effective_date', 'assigned_by'];
 
     public function employee() { return $this->belongsTo(Employee::class); }

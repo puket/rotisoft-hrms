@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Tenantable;
 
 class Employee extends Model
 {
     use HasFactory, SoftDeletes;
+    use Tenantable;
+    
     protected $guarded = [];
 
     // พนักงานคนนี้ อยู่แผนกอะไร

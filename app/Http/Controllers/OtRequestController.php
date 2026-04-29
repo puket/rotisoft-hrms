@@ -9,11 +9,6 @@ use Carbon\Carbon;
 
 class OtRequestController extends Controller
 {
-    // ==========================================
-    // 🌟 ฝั่งพนักงาน (ESS) - ส่งคำร้อง
-    // ==========================================
-    
-    // หน้าฟอร์มและประวัติการขอ OT
     public function index()
     {
         $employee = auth()->user()->employee;
@@ -26,11 +21,10 @@ class OtRequestController extends Controller
         return view('ot.index', compact('otRequests'));
     }
 
-    // บันทึกคำร้อง OT ลงฐานข้อมูล
     public function store(Request $request)
     {
         $request->validate([
-            'work_date' => 'required|date|after_or_equal:today', // ควรขอ OT ล่วงหน้าหรือวันปัจจุบัน
+            'work_date' => 'required|date|after_or_equal:today', 
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'reason' => 'required|string|max:255',
@@ -39,8 +33,11 @@ class OtRequestController extends Controller
             'work_date.after_or_equal' => 'ไม่สามารถขอ OT ย้อนหลังได้ (กรุณาติดต่อ HR)'
         ]);
 
+        $employee = auth()->user()->employee;
+
         OtRequest::create([
-            'employee_id' => auth()->user()->employee->id,
+            'company_id' => $employee->company_id, // 🌟 ยัด company_id
+            'employee_id' => $employee->id,
             'work_date' => $request->work_date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
@@ -51,17 +48,11 @@ class OtRequestController extends Controller
         return redirect()->back()->with('success', 'ส่งคำร้องขอทำ OT เรียบร้อยแล้ว รอหัวหน้าอนุมัติ ⏳');
     }
 
-    // ==========================================
-    // 🌟 ฝั่งหัวหน้างาน (MSS) - อนุมัติ OT
-    // ==========================================
-
-    // หน้ารายการรออนุมัติ OT
     public function approvals()
     {
-        Gate::authorize('is-manager'); // ต้องเป็นหัวหน้า
+        Gate::authorize('is-manager'); 
         $managerId = auth()->user()->employee->id;
 
-        // ดึงเฉพาะคำร้องของลูกน้องตัวเอง ที่ยัง Pending อยู่
         $requests = OtRequest::whereHas('employee', function($q) use ($managerId) {
             $q->where('manager_id', $managerId);
         })->where('status', 'Pending')->orderBy('work_date', 'asc')->paginate(10);
@@ -69,7 +60,6 @@ class OtRequestController extends Controller
         return view('ot.approvals', compact('requests'));
     }
 
-    // อัปเดตสถานะ อนุมัติ/ปฏิเสธ
     public function updateStatus(Request $request, $id)
     {
         Gate::authorize('is-manager');

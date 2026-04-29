@@ -7,20 +7,16 @@ use App\Models\Employee;
 use App\Models\Payroll;
 use Illuminate\Support\Facades\Gate;
 use Carbon\Carbon;
-use Barrier; // หรือใช้ชื่อเต็มตามด้านล่าง
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class PayrollController extends Controller
 {
-    // หน้าหลักสำหรับเลือกรอบบิล และแสดงผลการรันเงินเดือน
     public function index(Request $request)
     {
-        Gate::authorize('edit-employees');
+        Gate::authorize('is-hr');
 
-        // ค่าเริ่มต้นคือเดือนปัจจุบัน (เช่น 2026-04)
         $period = $request->input('period', Carbon::now()->format('Y-m'));
 
-        // ดึงข้อมูลเงินเดือนของเดือนที่เลือกมาแสดง
         $payrolls = Payroll::with('employee.department')
                            ->where('period', $period)
                            ->get();
@@ -28,10 +24,9 @@ class PayrollController extends Controller
         return view('payrolls.run', compact('period', 'payrolls'));
     }
 
-    // ฟังก์ชันรันเงินเดือน (ประมวลผลคำนวณ)
     public function calculate(Request $request)
     {
-        Gate::authorize('edit-employees');
+        Gate::authorize('is-hr');
         
         $request->validate(['period' => 'required|date_format:Y-m']);
         $period = $request->period;
@@ -55,24 +50,23 @@ class PayrollController extends Controller
 
         $count = 0;
 
-        // 🌟 ใช้ Transaction เพื่อป้องกันข้อมูลค้างหากเกิด Error ระหว่างทาง
         \DB::transaction(function () use ($employees, $period, $startOfMonth, $endOfMonth, $config, &$count) {
             
+            // 🌟 วนลูปพนักงาน เรามี $emp->company_id ให้ใช้ตรงนี้แหละครับ!
             foreach ($employees as $emp) {
                 $baseSalary = $emp->salary->base_salary;
                 $dailyRate = $baseSalary / $config['work_days_per_month'];
                 $hourlyRate = $dailyRate / $config['work_hours_per_day'];
 
-                // เช็คระดับพนักงาน
                 $isMD = is_null($emp->manager_id);
                 $isManager = Employee::where('manager_id', $emp->id)->exists();
                 $role = $isMD ? 'MD' : ($isManager ? 'Manager' : 'Staff');
 
-                // 🌟 [STEP 1] ลบข้อมูลเก่าของเดือนนี้ออกก่อน (ถ้ามี) เพื่อป้องกันข้อมูลซ้ำซ้อน
                 \App\Models\Payroll::where('employee_id', $emp->id)->where('period', $period)->delete();
 
-                // 🌟 [STEP 2] สร้างหัวสลิปเงินเดือน (Header) ไว้ก่อนเพื่อให้ได้ ID
+                // 🌟 1. ยัด company_id ลง Header ของสลิปเงินเดือน
                 $payroll = \App\Models\Payroll::create([
+                    'company_id' => $emp->company_id, // 👈 เพิ่มตรงนี้
                     'employee_id' => $emp->id,
                     'period' => $period,
                     'base_salary' => $baseSalary,
@@ -85,13 +79,11 @@ class PayrollController extends Controller
                     'status' => 'Draft'
                 ]);
 
-                // ตัวแปรสะสมยอด
                 $otAmount = 0; 
                 $totalDeductionAmount = 0;
                 $unpaidLeaveDeduction = 0;
                 $allowance = 0;
 
-                // --- 1. หักลาแบบไม่รับเงิน ---
                 $unpaidLeaves = \App\Models\Leave::with('leaveType')
                     ->where('employee_id', $emp->id)
                     ->where('status', 'Approved')
@@ -110,8 +102,9 @@ class PayrollController extends Controller
                     $deduction = ($leaveDays * $dailyRate);
                     $unpaidLeaveDeduction += $deduction;
 
-                    // บันทึกลง Item รายละเอียด
+                    // 🌟 2. ยัด company_id ลงรายการหักเงิน
                     \App\Models\PayrollItem::create([
+                        'company_id' => $emp->company_id, // 👈 เพิ่มตรงนี้
                         'payroll_id' => $payroll->id,
                         'item_name' => 'หักลาไม่รับเงิน',
                         'item_type' => 'Deduction',
@@ -120,7 +113,6 @@ class PayrollController extends Controller
                     ]);
                 }
 
-                // --- 2. เฉพาะระดับ Staff (OT & Attendance) ---
                 if ($role === 'Staff') {
                     $otSetting = \App\Models\OtSetting::where('effective_date', '<=', $endOfMonth)
                                     ->where('is_active', true)
@@ -135,7 +127,6 @@ class PayrollController extends Controller
 
                         if ($attendance && $attendance->clock_in && $attendance->clock_out) {
                             
-                            // คำนวณ OT
                             $hasOtPlan = \App\Models\OtRequest::where('employee_id', $emp->id)
                                             ->where('work_date', $schedule->work_date)
                                             ->where('status', 'Approved')->exists();
@@ -164,8 +155,9 @@ class PayrollController extends Controller
                                     $rate = $schedule->is_day_off ? $otSetting->holiday_rate : $otSetting->workday_rate;
                                     $dailyAmount = (($totalMins / 60) * $hourlyRate * $rate);
 
-                                    // 🌟 บันทึก OT Detail (ใช้ $payroll->id ได้แล้ว)
+                                    // 🌟 3. ยัด company_id ลงรายการ OT
                                     \App\Models\PayrollOtDetail::create([
+                                        'company_id' => $emp->company_id, // 👈 เพิ่มตรงนี้
                                         'payroll_id' => $payroll->id,
                                         'work_date' => $schedule->work_date,
                                         'pre_shift_mins' => $dailyPreMins,
@@ -178,14 +170,16 @@ class PayrollController extends Controller
                                 }
                             }
 
-                            // คำนวณมาสาย
                             $shiftIn = Carbon::parse($schedule->expected_clock_in);
                             $actualIn = Carbon::parse($attendance->clock_in);
                             $lateMins = $shiftIn->diffInMinutes($actualIn, false);
 
                             if ($lateMins > $config['grace_period_mins']) {
                                 $lateAmt = $lateMins * ($hourlyRate / 60);
+                                
+                                // 🌟 4. ยัด company_id ลงรายการหักมาสาย
                                 \App\Models\PayrollItem::create([
+                                    'company_id' => $emp->company_id, // 👈 เพิ่มตรงนี้
                                     'payroll_id' => $payroll->id,
                                     'item_name' => 'หักมาสาย',
                                     'item_type' => 'Deduction',
@@ -196,9 +190,11 @@ class PayrollController extends Controller
                             }
 
                         } else if (!$schedule->is_day_off) {
-                            // ขาดงาน
                             $absentAmt = ($dailyRate);
+                            
+                            // 🌟 5. ยัด company_id ลงรายการหักขาดงาน
                             \App\Models\PayrollItem::create([
+                                'company_id' => $emp->company_id, // 👈 เพิ่มตรงนี้
                                 'payroll_id' => $payroll->id,
                                 'item_name' => 'หักขาดงาน',
                                 'item_type' => 'Deduction',
@@ -210,17 +206,15 @@ class PayrollController extends Controller
                     }
                 }
 
-                // --- 3. ประกันสังคม & ภาษี ---
                 $socialSecurity = min($baseSalary * $config['social_security_percent'], $config['social_security_max']);
                 $taxAmount = $baseSalary * 0.03; 
 
-                // --- 4. สรุปยอดและ UPDATE กลับไปยัง Header ---
                 $totalDeductionsAll = $totalDeductionAmount + $unpaidLeaveDeduction;
                 $netSalary = ($baseSalary + $otAmount + $allowance) - ($totalDeductionsAll + $taxAmount + $socialSecurity);
 
                 $payroll->update([
                     'ot_amount' => $otAmount,
-                    'late_deduction' => $totalDeductionsAll, // ในตารางอาจชื่อนี้แต่เราเก็บยอดหักรวม
+                    'late_deduction' => $totalDeductionsAll,
                     'tax_amount' => $taxAmount,
                     'social_security' => $socialSecurity,
                     'net_salary' => $netSalary,
@@ -233,22 +227,18 @@ class PayrollController extends Controller
         return redirect('/payrolls?period=' . $period)->with('success', "🎉 คำนวณเงินเดือนรอบ {$period} สำเร็จ! ประมวลผลจำนวน {$count} รายการ");
     }
 
-    // ฟังก์ชันสำหรับพนักงานดูสลิปเงินเดือนตัวเอง (ESS)
     public function myPayslips()
     {
         $user = auth()->user();
 
-        // ตรวจสอบว่าเป็นพนักงานหรือไม่
         if (!$user->employee) {
             return redirect('/dashboard')->with('error', 'ไม่พบข้อมูลพนักงาน');
         }
 
-        // ดึงข้อมูลเงินเดือนเฉพาะของพนักงานคนนี้ เรียงจากเดือนล่าสุดไปเก่าสุด
         $payrolls = Payroll::with(['items', 'otDetails'])
             ->where('employee_id', $user->employee->id)
-            // .where('status', 'Approved') // 💡 อนาคตสามารถปลดคอมเมนต์ตรงนี้ เพื่อให้เห็นเฉพาะยอดที่ HR อนุมัติแล้ว
             ->orderBy('period', 'desc')
-            ->paginate(12); // ดูย้อนหลังได้หน้าละ 12 เดือน (1 ปี)
+            ->paginate(12);
 
         return view('payrolls.my_payslips', compact('payrolls'));
     }
@@ -265,21 +255,17 @@ class PayrollController extends Controller
             'title' => 'สลิปเงินเดือน'
         ];
 
-        // 🌟 [STEP 1] สร้าง Instance ของ PDF และเก็บไว้ในตัวแปร $pdf ก่อน
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('payrolls.pdf_template', $data);
 
-        // 🌟 [STEP 2] ตั้งค่า Option ผ่านตัวแปร $pdf ที่เราสร้างขึ้น
         $pdf->setOption([
             'fontDir' => storage_path('fonts'),
             'fontCache' => storage_path('fonts'),
             'tempDir' => storage_path('fonts'),
             'isRemoteEnabled' => true,
             'isHtml5ParserEnabled' => true,
-            'defaultFont' => 'THSarabunNew' // กำหนดฟอนต์เริ่มต้นเป็นภาษาไทย
+            'defaultFont' => 'THSarabunNew' 
         ]);
 
-        // 🌟 [STEP 3] สั่งดาวน์โหลด
         return $pdf->download('Payslip_' . $payroll->period . '.pdf');
     }
-    
 }

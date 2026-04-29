@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Tenantable;
 
 class OtSetting extends Model
 {
-
+    use Tenantable;
+    
     protected $fillable = [
         'employee_type',
         'effective_date',

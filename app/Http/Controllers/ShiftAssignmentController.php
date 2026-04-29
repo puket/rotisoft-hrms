@@ -15,7 +15,7 @@ class ShiftAssignmentController extends Controller
     // หน้าจอแสดงรายชื่อพนักงานและฟอร์มมอบหมายกะ
     public function index()
     {
-        Gate::authorize('edit-employees');
+        Gate::authorize('is-hr');
 
         $employees = Employee::with('department', 'shift')->where('status', 'Active')->paginate(15);
         $shifts = Shift::orderBy('start_time', 'asc')->get();
@@ -26,7 +26,7 @@ class ShiftAssignmentController extends Controller
     // ประมวลผลการมอบหมายกะและ Gen ตารางรายวัน
     public function store(Request $request)
     {
-        Gate::authorize('edit-employees');
+        Gate::authorize('is-hr');
 
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
@@ -40,6 +40,7 @@ class ShiftAssignmentController extends Controller
         
         // 1. บันทึกประวัติการมอบหมายลง History
         ShiftAssignment::create([
+            'company_id' => $employee->company_id, // 🌟 1. ยัด company_id ตรงๆ ให้ตารางประวัติ
             'employee_id' => $employee->id,
             'shift_id' => $shift->id,
             'effective_date' => $effectiveDate->toDateString(),
@@ -57,13 +58,14 @@ class ShiftAssignmentController extends Controller
                         ->where('work_date', '>=', $effectiveDate->toDateString())
                         ->delete();
 
-        // สร้าง Array เพื่อทำการ Bulk Insert (ทำงานเร็วกว่าการบันทึกทีละวัน)
+        // สร้าง Array เพื่อทำการ Bulk Insert
         $schedules = [];
         for ($date = $effectiveDate->copy(); $date->lte($endOfYear); $date->addDay()) {
             // สมมติให้ วันเสาร์-อาทิตย์ เป็นวันหยุดพักผ่อน Default
             $isDayOff = $date->isWeekend(); 
 
             $schedules[] = [
+                'company_id' => $employee->company_id, // 🌟 2. ยัด company_id ตรงๆ ใส่ Array ก่อนทำ Bulk Insert
                 'employee_id' => $employee->id,
                 'work_date' => $date->toDateString(),
                 'shift_id' => $shift->id,

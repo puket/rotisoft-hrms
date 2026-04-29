@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Tenantable;
 
 class Shift extends Model
 {
+    use Tenantable;
+    
     protected $fillable = [
         'shift_code', // เพิ่มเข้ามา
         'name',
