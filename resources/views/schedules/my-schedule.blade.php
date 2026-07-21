@@ -1,35 +1,29 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-            <h4 class="fw-bold text-primary mb-0">📅 ปฏิทินตารางทำงาน (Schedule)</h4>
-            <p class="text-muted mb-0">
-                แสดงตารางงานของ: <strong class="text-dark">{{ $viewEmployee->first_name }} {{ $viewEmployee->last_name }}</strong>
-            </p>
-        </div>
-        
-        @can('edit-employees')
-        <div class="col-md-6 text-md-end mt-3 mt-md-0">
-            <form action="/my-schedule" method="GET" class="d-inline-flex align-items-center">
-                <label class="me-2 fw-bold text-muted small">ดูตารางของพนักงาน:</label>
-                <select name="employee_id" class="form-select form-select-sm w-auto shadow-sm" onchange="this.form.submit()">
-                    @foreach($employeesList as $emp)
-                        <option value="{{ $emp->id }}" {{ $viewEmployee->id == $emp->id ? 'selected' : '' }}>
-                            {{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->employee_code }})
-                        </option>
-                    @endforeach
-                </select>
-            </form>
-        </div>
-        @endcan
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="page-title"><i class="bi bi-calendar3 text-primary me-2"></i>ปฏิทินตารางทำงาน</h1>
+        <div class="page-subtitle">แสดงตารางงานของ: <strong class="text-dark">{{ $viewEmployee->first_name }} {{ $viewEmployee->last_name }}</strong></div>
     </div>
 
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body p-4">
-            <div id="calendar"></div>
-        </div>
+    @can('edit-employees')
+    <form action="/my-schedule" method="GET" class="d-inline-flex align-items-center">
+        <label class="me-2 fw-semibold text-muted small">ดูตารางของพนักงาน:</label>
+        <select name="employee_id" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+            @foreach($employeesList as $emp)
+                <option value="{{ $emp->id }}" {{ $viewEmployee->id == $emp->id ? 'selected' : '' }}>
+                    {{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->employee_code }})
+                </option>
+            @endforeach
+        </select>
+    </form>
+    @endcan
+</div>
+
+<div class="card">
+    <div class="card-body p-4">
+        <div id="calendar"></div>
     </div>
 </div>
 
@@ -73,7 +67,7 @@
     }
     .fc-toolbar-title {
         font-weight: bold !important;
-        color: #0d6efd;
+        color: var(--rs-primary);
     }
 </style>
 @endsection

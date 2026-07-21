@@ -232,6 +232,38 @@ body {
 .page-subtitle { color: var(--rs-muted); font-size: 0.85rem; }
 
 // ---------------------------------------------------------------------
+//  Forms — long multi-section forms (employee create/edit, etc.)
+// ---------------------------------------------------------------------
+.form-label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #344054;
+    margin-bottom: 0.35rem;
+}
+
+.form-section + .form-section { margin-top: 1.85rem; }
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 1.15rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--rs-border);
+}
+.form-section-title .section-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 0.9rem; flex: 0 0 auto;
+}
+.section-icon-primary { background: var(--rs-primary-soft); color: var(--rs-primary); }
+.section-icon-success { background: rgba($success, 0.12); color: darken($success, 8%); }
+.section-icon-warning { background: rgba($warning, 0.14); color: darken($warning, 10%); }
+.section-icon-info    { background: rgba($info, 0.12);    color: darken($info, 15%); }
+.section-icon-danger  { background: rgba($danger, 0.10);  color: darken($danger, 5%); }
+
+// ---------------------------------------------------------------------
 //  Stat cards (gradient)
 // ---------------------------------------------------------------------
 .stat-card {
@@ -314,6 +346,47 @@ body {
     background: var(--rs-primary-soft); color: var(--rs-primary); border: none;
 }
 .btn-soft:hover { background: rgba($primary, 0.16); color: var(--rs-primary); }
+
+// ---------------------------------------------------------------------
+//  Legacy view compatibility — full-width containers inside the shell
+//  (module pages wrap content in .container / .container-fluid; the
+//  sidebar layout already pads .app-content, so let them stretch)
+// ---------------------------------------------------------------------
+.app-content > .container,
+.app-content > .container-fluid,
+.app-content .container {
+    max-width: 100%;
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+// Trim the extra top padding legacy pages add (.py-4 etc.) — the shell handles it
+.app-content > .container.py-4,
+.app-content > .container-fluid.py-4 { padding-top: 0 !important; }
+
+// Solid coloured card headers (bg-primary etc.) → keep but soften corners
+.card > .card-header.bg-primary,
+.card > .card-header.bg-dark,
+.card > .card-header.bg-success {
+    border-top-left-radius: var(--rs-radius);
+    border-top-right-radius: var(--rs-radius);
+}
+
+// Alerts — softer, rounded
+.alert {
+    border: none;
+    border-radius: $border-radius-lg;
+    font-size: 0.86rem;
+}
+.alert-success { background: rgba($success, 0.12); color: darken($success, 12%); }
+.alert-danger  { background: rgba($danger, 0.10);  color: darken($danger, 8%); }
+.alert-warning { background: rgba($warning, 0.14); color: darken($warning, 14%); }
+.alert-info    { background: rgba($info, 0.12);    color: darken($info, 18%); }
+
+// Compact icon action buttons in tables
+.table .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
 
 // ---------------------------------------------------------------------
 //  Responsive — collapse sidebar under 992px
