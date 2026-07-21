@@ -1,7 +1,90 @@
-// Body
-$body-bg: #f8fafc;
+// =====================================================================
+//  RotiSoft — Design Tokens
+//  Bootstrap 5 SCSS variable overrides (must load BEFORE bootstrap).
+//  Change values here and the whole app re-themes automatically.
+// =====================================================================
 
-// Typography
-$font-family-sans-serif: 'Nunito', sans-serif;
-$font-size-base: 0.9rem;
+// ---- Brand palette ---------------------------------------------------
+$primary:   #4f46e5;   // indigo — primary actions, active nav
+$secondary: #64748b;   // slate — muted UI
+$success:   #12b76a;   // green — positive / payroll
+$info:      #0ea5e9;   // sky
+$warning:   #f79009;   // amber
+$danger:    #ef4444;   // red
+$light:     #f8fafc;
+$dark:      #0f172a;
+
+// Extra brand accents used by gradients / stat cards
+$brand-indigo: #4f46e5;
+$brand-blue:   #3b5bdb;
+$brand-purple: #7c3aed;
+$brand-green:  #12b76a;
+$brand-teal:   #0ca678;
+
+// ---- Surfaces & text -------------------------------------------------
+$body-bg:    #f5f6fa;   // app canvas
+$body-color: #1e293b;   // primary text
+$border-color: #e6e8ee;
+
+// ---- Typography ------------------------------------------------------
+// 'Inter' renders Latin, 'Noto Sans Thai' renders Thai (per-glyph fallback)
+$font-family-sans-serif: 'Inter', 'Noto Sans Thai', system-ui, -apple-system, sans-serif;
+$font-size-base:   0.9rem;
 $line-height-base: 1.6;
+$headings-font-weight: 700;
+$font-weight-bold: 700;
+
+// ---- Radius (softer, modern) ----------------------------------------
+$border-radius:    0.625rem;
+$border-radius-sm: 0.45rem;
+$border-radius-lg: 0.875rem;
+$border-radius-xl: 1rem;
+$border-radius-2xl: 1.25rem;
+$border-radius-pill: 50rem;
+
+// ---- Shadows (soft) --------------------------------------------------
+$box-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+$box-shadow:    0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+$box-shadow-lg: 0 12px 28px rgba(16, 24, 40, 0.10), 0 4px 8px rgba(16, 24, 40, 0.04);
+
+// ---- Components ------------------------------------------------------
+$card-border-width:  0;
+$card-border-radius: $border-radius-xl;
+$card-box-shadow:    $box-shadow;
+$card-cap-bg:        transparent;
+$card-spacer-y:      1.25rem;
+$card-spacer-x:      1.25rem;
+
+$btn-border-radius:    $border-radius;
+$btn-border-radius-sm: $border-radius-sm;
+$btn-border-radius-lg: $border-radius-lg;
+$btn-font-weight:      600;
+$btn-padding-y:        0.5rem;
+$btn-padding-x:        1rem;
+
+$input-border-radius:    $border-radius;
+$input-border-color:     $border-color;
+$input-focus-border-color: lighten($primary, 25%);
+$input-btn-focus-color:  rgba($primary, 0.15);
+
+$table-border-color:   $border-color;
+$table-cell-padding-y: 0.85rem;
+$table-cell-padding-x: 1rem;
+
+$dropdown-border-width:   0;
+$dropdown-border-radius:  $border-radius-lg;
+$dropdown-box-shadow:     $box-shadow-lg;
+$dropdown-padding-y:      0.5rem;
+$dropdown-item-padding-y: 0.55rem;
+$dropdown-link-hover-bg:  rgba($primary, 0.07);
+
+$nav-link-font-weight: 600;
+$badge-font-weight:    600;
+$badge-border-radius:  $border-radius-pill;
+
+$progress-height:        10px;
+$progress-bg:            #eef0f5;
+$progress-border-radius: $border-radius-pill;
+
+$modal-content-border-radius: $border-radius-lg;
+$modal-content-border-width:  0;
