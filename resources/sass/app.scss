@@ -1,8 +1,14 @@
-// Fonts
-@import url('https://fonts.bunny.net/css?family=Nunito');
+// =====================================================================
+//  RotiSoft — Application stylesheet
+//  Order matters: tokens → Bootstrap → theme/component layer
+//  (Fonts are loaded via <link> in layouts/app.blade.php for performance)
+// =====================================================================
 
-// Variables
+// 1) Design tokens (Bootstrap variable overrides)
 @import 'variables';
 
-// Bootstrap
+// 2) Bootstrap core
 @import 'bootstrap/scss/bootstrap';
+
+// 3) Custom theme & components (sidebar, stat cards, topbar, ...)
+@import 'theme';
