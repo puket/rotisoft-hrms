@@ -232,6 +232,38 @@ body {
 .page-subtitle { color: var(--rs-muted); font-size: 0.85rem; }
 
 // ---------------------------------------------------------------------
+//  Forms — long multi-section forms (employee create/edit, etc.)
+// ---------------------------------------------------------------------
+.form-label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #344054;
+    margin-bottom: 0.35rem;
+}
+
+.form-section + .form-section { margin-top: 1.85rem; }
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 1.15rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--rs-border);
+}
+.form-section-title .section-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 0.9rem; flex: 0 0 auto;
+}
+.section-icon-primary { background: var(--rs-primary-soft); color: var(--rs-primary); }
+.section-icon-success { background: rgba($success, 0.12); color: darken($success, 8%); }
+.section-icon-warning { background: rgba($warning, 0.14); color: darken($warning, 10%); }
+.section-icon-info    { background: rgba($info, 0.12);    color: darken($info, 15%); }
+.section-icon-danger  { background: rgba($danger, 0.10);  color: darken($danger, 5%); }
+
+// ---------------------------------------------------------------------
 //  Stat cards (gradient)
 // ---------------------------------------------------------------------
 .stat-card {
