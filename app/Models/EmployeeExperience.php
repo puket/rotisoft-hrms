@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Tenantable;
 
 class EmployeeExperience extends Model
 {
+    use Tenantable;
+
     protected $table = 'employee_experiences'; // 🌟 เพิ่มบรรทัดนี้
-    
+
     protected $fillable = ['employee_id', 'company_name', 'job_title', 'start_date', 'end_date', 'job_description'];
 
     public function employee()
