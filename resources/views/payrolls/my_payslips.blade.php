@@ -1,79 +1,73 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h4 class="fw-bold text-primary mb-0">🧾 สลิปเงินเดือนของฉัน (My Payslips)</h4>
-            <p class="text-muted">ตรวจสอบรายละเอียดรายรับ-รายจ่าย และยอดสุทธิในแต่ละรอบเดือน</p>
-        </div>
-    </div>
+<div class="mb-4">
+    <h1 class="page-title"><i class="bi bi-receipt text-primary me-2"></i>สลิปเงินเดือนของฉัน</h1>
+    <div class="page-subtitle">ตรวจสอบรายละเอียดรายรับ-รายจ่าย และยอดสุทธิในแต่ละรอบเดือน</div>
+</div>
 
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle text-center">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="py-3">รอบบิล (Period)</th>
-                            <th>ฐานเงินเดือน</th>
-                            <th class="text-success">รวมรายรับ</th>
-                            <th class="text-danger">รวมรายการหัก</th>
-                            <th class="bg-success text-white">รับสุทธิ (Net)</th>
-                            <th>สถานะ</th>
-                            <th>การดำเนินการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($payrolls as $pr)
-                            @php
-                                $totalPlus = $pr->ot_amount + $pr->allowance;
-                                $totalMinus = $pr->late_deduction + $pr->tax_amount + $pr->social_security;
-                            @endphp
-                        <tr>
-                            <td class="fw-bold py-3">{{ Carbon\Carbon::parse($pr->period)->translatedFormat('F Y') }}</td>
-                            <td>{{ number_format($pr->base_salary, 2) }}</td>
-                            <td class="text-success">+{{ number_format($totalPlus, 2) }}</td>
-                            <td class="text-danger">-{{ number_format($totalMinus, 2) }}</td>
-                            <td class="fw-bold text-success fs-5">{{ number_format($pr->net_salary, 2) }} ฿</td>
-                            <td>
-                                <span class="badge {{ $pr->status == 'Draft' ? 'bg-warning text-dark' : 'bg-success' }}">
-                                    {{ $pr->status }}
-                                </span>
-                            </td>
-                            <td>
-                                    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#payslipModal{{ $pr->id }}">
-                                        ดูสลิป
-                                    </button>
-                                    
-                                    <a href="{{ route('payrolls.download-pdf', $pr->id) }}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                                        <i class="bi bi-file-pdf"></i> PDF
-                                    </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="text-muted py-5">
-                                <h5>ยังไม่มีข้อมูลสลิปเงินเดือนของคุณ</h5>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle text-center mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">รอบบิล (Period)</th>
+                        <th>ฐานเงินเดือน</th>
+                        <th class="text-success">รวมรายรับ</th>
+                        <th class="text-danger">รวมรายการหัก</th>
+                        <th>รับสุทธิ (Net)</th>
+                        <th>สถานะ</th>
+                        <th class="pe-4">การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($payrolls as $pr)
+                        @php
+                            $totalPlus = $pr->ot_amount + $pr->allowance;
+                            $totalMinus = $pr->late_deduction + $pr->tax_amount + $pr->social_security;
+                        @endphp
+                    <tr>
+                        <td class="ps-4 fw-semibold">{{ Carbon\Carbon::parse($pr->period)->translatedFormat('F Y') }}</td>
+                        <td>{{ number_format($pr->base_salary, 2) }}</td>
+                        <td class="text-success">+{{ number_format($totalPlus, 2) }}</td>
+                        <td class="text-danger">-{{ number_format($totalMinus, 2) }}</td>
+                        <td class="fw-bold text-success fs-5">{{ number_format($pr->net_salary, 2) }} ฿</td>
+                        <td>
+                            <span class="badge-soft {{ $pr->status == 'Draft' ? 'badge-soft-warning' : 'badge-soft-success' }}">
+                                {{ $pr->status }}
+                            </span>
+                        </td>
+                        <td class="pe-4">
+                            <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#payslipModal{{ $pr->id }}">
+                                ดูสลิป
+                            </button>
+                            <a href="{{ route('payrolls.download-pdf', $pr->id) }}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                <i class="bi bi-file-pdf"></i> PDF
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-3 d-block mb-2 opacity-50"></i>ยังไม่มีข้อมูลสลิปเงินเดือนของคุณ
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
-    
-    <div class="mt-3">
-        {{ $payrolls->links() }}
-    </div>
+    @if ($payrolls->hasPages())
+    <div class="card-footer bg-transparent border-0 px-4 py-3">{{ $payrolls->links() }}</div>
+    @endif
 </div>
 
 @foreach($payrolls as $pr)
 <div class="modal fade" id="payslipModal{{ $pr->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content border-0 shadow-lg">
-            
+
             <div class="modal-header bg-primary text-white border-0 pb-4">
                 <div class="w-100">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -92,12 +86,12 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="modal-body p-4 bg-light">
+
+            <div class="modal-body p-4" style="background: var(--rs-canvas);">
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-header bg-white fw-bold text-success border-bottom-0 pt-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-transparent border-0 fw-bold text-success pt-3">
                                 <i class="bi bi-arrow-down-circle"></i> รายรับ (Earnings)
                             </div>
                             <div class="card-body">
@@ -114,7 +108,7 @@
                                     <span>{{ number_format($pr->allowance, 2) }}</span>
                                 </div>
                             </div>
-                            <div class="card-footer bg-success text-white d-flex justify-content-between fw-bold">
+                            <div class="card-footer bg-success text-white d-flex justify-content-between fw-bold border-0">
                                 <span>รวมรายรับ</span>
                                 <span>{{ number_format($pr->base_salary + $pr->ot_amount + $pr->allowance, 2) }}</span>
                             </div>
@@ -122,8 +116,8 @@
                     </div>
 
                     <div class="col-md-6">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-header bg-white fw-bold text-danger border-bottom-0 pt-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-transparent border-0 fw-bold text-danger pt-3">
                                 <i class="bi bi-arrow-up-circle"></i> รายการหัก (Deductions)
                             </div>
                             <div class="card-body">
@@ -140,7 +134,7 @@
                                     <span>{{ number_format($pr->tax_amount, 2) }}</span>
                                 </div>
                             </div>
-                            <div class="card-footer bg-danger text-white d-flex justify-content-between fw-bold">
+                            <div class="card-footer bg-danger text-white d-flex justify-content-between fw-bold border-0">
                                 <span>รวมรายการหัก</span>
                                 <span>{{ number_format($pr->late_deduction + $pr->social_security + $pr->tax_amount, 2) }}</span>
                             </div>
@@ -148,22 +142,22 @@
                     </div>
                 </div>
 
-                <div class="mt-4 card border-primary shadow-sm">
-                    <div class="card-body text-center bg-primary bg-opacity-10 py-4">
+                <div class="mt-4 card">
+                    <div class="card-body text-center py-4" style="background: var(--rs-primary-soft);">
                         <p class="text-muted fw-bold mb-1">รายรับสุทธิ (Net Pay)</p>
                         <h2 class="text-primary fw-bold mb-0">THB {{ number_format($pr->net_salary, 2) }}</h2>
                     </div>
                 </div>
 
                 @if($pr->otDetails->count() > 0)
-                <div class="mt-4 border-top pt-3">
+                <div class="mt-4 border-top pt-3" style="border-color: var(--rs-border) !important;">
                     <h6 class="fw-bold text-primary mb-3">
                         <i class="bi bi-clock-history"></i> รายละเอียดการทำงานล่วงเวลา (OT Details)
                     </h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-hover border" style="font-size: 0.85rem;">
-                            <thead class="table-light text-center">
-                                <tr>
+                            <thead>
+                                <tr class="text-center">
                                     <th>วันที่</th>
                                     <th>ก่อนงาน (นาที)</th>
                                     <th>หลังงาน (นาที)</th>
@@ -201,7 +195,7 @@
                         @foreach($pr->items as $item)
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <span class="badge {{ $item->item_type == 'Addition' ? 'bg-success' : 'bg-danger' }} me-2">
+                                <span class="badge-soft {{ $item->item_type == 'Addition' ? 'badge-soft-success' : 'badge-soft-danger' }} me-2">
                                     {{ $item->item_type == 'Addition' ? '+' : '-' }}
                                 </span>
                                 <strong>{{ $item->item_name }}</strong>
@@ -217,10 +211,10 @@
                 @endif
 
             </div>
-            
-            <div class="modal-footer border-0 bg-light d-flex justify-content-between">
+
+            <div class="modal-footer border-0 d-flex justify-content-between">
                 <small class="text-muted">เอกสารนี้สร้างโดยระบบอัตโนมัติ ไม่จำเป็นต้องมีลายเซ็น</small>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                <button type="button" class="btn btn-soft" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
