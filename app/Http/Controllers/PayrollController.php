@@ -42,7 +42,7 @@ class PayrollController extends Controller
             'social_security_max' => 750
         ];
 
-        $employees = Employee::with('salary')->where('status', 'Active')->whereHas('salary')->get();
+        $employees = Employee::with(['salary', 'position'])->where('status', 'Active')->whereHas('salary')->get();
 
         if ($employees->count() == 0) {
             return redirect()->back()->with('error', 'ไม่พบพนักงานที่มีการตั้งค่าฐานเงินเดือน');
@@ -58,9 +58,11 @@ class PayrollController extends Controller
                 $dailyRate = $baseSalary / $config['work_days_per_month'];
                 $hourlyRate = $dailyRate / $config['work_hours_per_day'];
 
-                $isMD = is_null($emp->manager_id);
-                $isManager = Employee::where('manager_id', $emp->id)->exists();
-                $role = $isMD ? 'MD' : ($isManager ? 'Manager' : 'Staff');
+                // Role มาจาก job_level ของ "ตำแหน่งงาน" ตาม Business Rules (ข้อ 8.3)
+                // กฎหักสาย/ขาดงาน/คิด OT บังคับใช้เฉพาะ Staff เท่านั้น
+                // หากตำแหน่งยังไม่ตั้ง job_level หรือพนักงานไม่มีตำแหน่ง ให้ถือเป็น Staff
+                // (คิดหักตามปกติ) เพื่อไม่ให้ข้อมูลที่ตั้งค่าไม่ครบเล็ดลอดเป็นพนักงานรับเงินเต็ม
+                $role = optional($emp->position)->job_level ?: 'Staff';
 
                 \App\Models\Payroll::where('employee_id', $emp->id)->where('period', $period)->delete();
 
