@@ -59,6 +59,14 @@ class PositionController extends Controller
 
     public function destroy(Position $position)
     {
+        // Safe Deletion Rule: ห้ามลบตำแหน่งงาน หากยังมีพนักงานที่ดำรงตำแหน่งนี้อยู่แบบ Active
+        if ($position->employees()->where('status', 'Active')->exists()) {
+            return redirect()->route('positions.index')->with(
+                'error',
+                'ไม่สามารถลบตำแหน่งงานนี้ได้ เนื่องจากยังมีพนักงานที่ดำรงตำแหน่งนี้อยู่ กรุณาย้ายพนักงานไปตำแหน่งอื่นก่อน'
+            );
+        }
+
         $position->delete();
         return redirect()->route('positions.index')->with('success', 'ลบข้อมูลตำแหน่งงานเรียบร้อยแล้ว 🗑️');
     }

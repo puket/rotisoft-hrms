@@ -57,6 +57,29 @@ class DepartmentController extends Controller
 
     public function destroy(Department $department)
     {
+        // Safe Deletion Rule: ห้ามลบแผนกที่ยังมีแผนกย่อย/ตำแหน่งงาน/พนักงานผูกอยู่
+        // ต้องย้ายข้อมูลเหล่านี้ออกไปที่อื่นก่อน ป้องกันข้อมูลกำพร้า
+        if ($department->children()->exists()) {
+            return redirect()->route('departments.index')->with(
+                'error',
+                'ไม่สามารถลบแผนกนี้ได้ เนื่องจากยังมีแผนกย่อยสังกัดอยู่ กรุณาย้ายหรือลบแผนกย่อยออกก่อน'
+            );
+        }
+
+        if ($department->positions()->exists()) {
+            return redirect()->route('departments.index')->with(
+                'error',
+                'ไม่สามารถลบแผนกนี้ได้ เนื่องจากยังมีตำแหน่งงานสังกัดอยู่ กรุณาย้ายหรือลบตำแหน่งงานออกก่อน'
+            );
+        }
+
+        if ($department->employees()->exists()) {
+            return redirect()->route('departments.index')->with(
+                'error',
+                'ไม่สามารถลบแผนกนี้ได้ เนื่องจากยังมีพนักงานสังกัดอยู่ กรุณาย้ายพนักงานออกจากแผนกนี้ก่อน'
+            );
+        }
+
         $department->delete();
         return redirect()->route('departments.index')->with('success', 'ลบข้อมูลแผนกเรียบร้อยแล้ว 🗑️');
     }

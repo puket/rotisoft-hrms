@@ -51,6 +51,35 @@ class EmployeeController extends Controller
         return view('employees.show', compact('employee'));
     }
 
+    public function destroy($id)
+    {
+        Gate::authorize('is-hr');
+
+        $employee = Employee::findOrFail($id);
+
+        // Safe Deletion Rule:
+        // ถ้าพนักงานมี "ประวัติการลงเวลาทำงาน" แล้ว = เคยมาทำงานจริง มีผลผูกกับ
+        // ระบบเงินเดือน/รายงาน จึงไม่อนุญาตให้ลบ (ให้เปลี่ยนสถานะเป็น "ลาออก" แทน
+        // เพื่อรักษาประวัติไว้)
+        $hasAttendance = \App\Models\Attendance::where('employee_id', $employee->id)->exists();
+
+        if ($hasAttendance) {
+            return redirect()->route('employees.index')->with(
+                'error',
+                'ไม่สามารถลบพนักงานคนนี้ได้ เนื่องจากมีประวัติการลงเวลาทำงานแล้ว — กรุณาแก้ไขสถานะเป็น "ลาออก (Resigned)" แทน เพื่อเก็บประวัติไว้'
+            );
+        }
+
+        // ไม่มีประวัติการลงเวลาเลย = พนักงานใหม่ที่ไม่มาทำงานวันแรก (No-show)
+        // เก็บเป็น Archive (soft delete) เผื่อกู้คืนภายหลัง แทนการลบถาวร
+        $employee->delete();
+
+        return redirect()->route('employees.index')->with(
+            'success',
+            'ย้ายพนักงานเข้าคลังเก็บถาวร (Archive) เรียบร้อยแล้ว 🗄️ เนื่องจากยังไม่มีประวัติการลงเวลาทำงาน'
+        );
+    }
+
     public function edit($id)
     {
         $employee = \App\Models\Employee::findOrFail($id);

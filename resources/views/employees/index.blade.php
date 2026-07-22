@@ -13,6 +13,13 @@
     @endcan
 </div>
 
+@if (session('success'))
+    <div class="alert alert-success"><i class="bi bi-check-circle me-1"></i>{{ session('success') }}</div>
+@endif
+@if (session('error'))
+    <div class="alert alert-danger"><i class="bi bi-exclamation-circle me-1"></i>{{ session('error') }}</div>
+@endif
+
 <div class="card">
     <div class="card-body pb-0">
         <form action="/employees" method="GET" class="mb-3">
@@ -87,6 +94,13 @@
                             <a href="/employees/{{ $emp->id }}" class="btn btn-sm btn-outline-secondary">ดูข้อมูล</a>
                             @can('edit-employees')
                                 <a href="/employees/{{ $emp->id }}/edit" class="btn btn-sm btn-soft">แก้ไข</a>
+                            @endcan
+                            @can('is-hr')
+                                <form action="{{ route('employees.destroy', $emp->id) }}" method="POST" class="d-inline"
+                                      onsubmit="return confirm('ยืนยันการลบพนักงานคนนี้?\n\nหากเคยมีประวัติลงเวลาทำงานแล้ว ระบบจะไม่ให้ลบ (ต้องเปลี่ยนสถานะเป็นลาออกแทน) หากยังไม่มีประวัติเลย จะถูกย้ายเข้าคลังเก็บถาวร');">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger" title="ลบ"><i class="bi bi-trash"></i></button>
+                                </form>
                             @endcan
                         </td>
                     </tr>
