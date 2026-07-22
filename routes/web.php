@@ -56,6 +56,7 @@ Route::middleware(['auth', 'can:is-hr'])->group(function () {
     Route::get('/employees/{id}/edit', [App\Http\Controllers\EmployeeController::class, 'edit']);
     Route::put('/employees/{id}', [App\Http\Controllers\EmployeeController::class, 'update']);
     Route::get('/employees/{id}', [App\Http\Controllers\EmployeeController::class, 'show'])->name('employees.show');
+    Route::delete('/employees/{id}', [App\Http\Controllers\EmployeeController::class, 'destroy'])->name('employees.destroy');
 
     // บันทึกประวัติส่วนตัวพนักงาน
     Route::post('/employees/{id}/educations', [App\Http\Controllers\EmployeeController::class, 'storeEducation'])->name('employees.educations.store');

@@ -36,4 +36,10 @@ class Department extends Model
     {
         return $this->belongsTo(Department::class, 'parent_id');
     }
+
+    // แผนกนี้ มีแผนกย่อยอะไรบ้าง (กลับด้านของ parent())
+    public function children()
+    {
+        return $this->hasMany(Department::class, 'parent_id');
+    }
 }

@@ -13,6 +13,9 @@
 @if (session('success'))
     <div class="alert alert-success"><i class="bi bi-check-circle me-1"></i>{{ session('success') }}</div>
 @endif
+@if (session('error'))
+    <div class="alert alert-danger"><i class="bi bi-exclamation-circle me-1"></i>{{ session('error') }}</div>
+@endif
 
 <div class="card">
     <div class="card-body p-0">
