@@ -134,36 +134,3 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/my-payslips', [App\Http\Controllers\PayrollController::class, 'myPayslips'])->name('my-payslips');
     Route::get('/my-payslips/{id}/download', [App\Http\Controllers\PayrollController::class, 'downloadPDF'])->name('payrolls.download-pdf');
 });
-
-Route::get('/update-hr-role-by-dept', function() {
-    // 1. ค้นหาแผนกที่เกี่ยวข้องกับ HR (ปรับแก้คำค้นหาได้ตามชื่อที่คุณตั้งในฐานข้อมูล)
-    $hrDepartmentIds = \App\Models\Department::where('name', 'LIKE', '%HR%')
-        ->orWhere('name', 'LIKE', '%Human Resource%')
-        ->orWhere('name', 'LIKE', '%บุคคล%')
-        ->pluck('id');
-
-    if ($hrDepartmentIds->isEmpty()) {
-        return "<h1 style='color:red; text-align:center; margin-top:50px;'>
-                    ❌ ไม่พบข้อมูลแผนก HR ในระบบ<br>
-                    <small style='color:gray; font-size: 20px;'>(กรุณาตรวจสอบชื่อแผนกในเมนูจัดการแผนกอีกครั้ง)</small>
-                </h1>";
-    }
-
-    // 2. ดึงข้อมูลพนักงานที่อยู่ในแผนก HR
-    $employees = \App\Models\Employee::whereIn('department_id', $hrDepartmentIds)->get();
-    
-    $updateCount = 0;
-
-    // 3. วนลูปอัปเดต Role ในตาราง Users
-    foreach ($employees as $emp) {
-        if ($emp->user && $emp->user->role === 'staff') { // อัปเดตเฉพาะคนที่ยังเป็น staff
-            $emp->user->update(['role' => 'hr']);
-            $updateCount++;
-        }
-    }
-
-    return "<h1 style='color:green; text-align:center; margin-top:50px;'>
-                ✅ ปรับสิทธิ์พนักงานแผนก HR เรียบร้อย!<br>
-                <small style='color:gray; font-size: 20px;'>อัปเดตสิทธิ์จาก staff เป็น hr จำนวน: {$updateCount} บัญชี</small>
-            </h1>";
-});
