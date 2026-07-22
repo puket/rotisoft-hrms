@@ -42,6 +42,14 @@ class AppServiceProvider extends ServiceProvider
             if (in_array($user->role, ['super_admin', 'tenant_admin', 'hr'])) return true;
             return $user->employee && \App\Models\Employee::where('manager_id', $user->employee->id)->exists();
         });
+
+        // 5. สิทธิ์ "จัดการข้อมูลพนักงาน" (เฉพาะ HR ขึ้นไป) - คุมปุ่มเพิ่ม/แก้ไขพนักงาน
+        // และการสลับไปดูตารางงาน/กะของพนักงานคนอื่นแทนตัวเอง (my-schedule, schedules/table)
+        // เดิมไม่เคย Gate::define() ไว้เลย (มีแต่ในเมธอด bootxxx() ที่ Laravel ไม่เรียก)
+        // ทำให้ @can('edit-employees') คืนค่า false เสมอ ไม่มีใครเห็นปุ่ม/ตัวเลือกเหล่านี้
+        \Illuminate\Support\Facades\Gate::define('edit-employees', function ($user) {
+            return in_array($user->role, ['super_admin', 'tenant_admin', 'hr']);
+        });
     }
     
     public function xxbootx(): void
